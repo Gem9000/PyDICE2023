@@ -136,9 +136,9 @@ class DiceParams():
         self._gA[1] = self._gA1 #Growth rate
         self._al[1] = self._AL1 #Initial total factor productivity
         self._gsig[1] = self._gsigma1 #Initial growth of sigma
-        self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
+        #self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
         
-        
+
 
 
 print("Success")
