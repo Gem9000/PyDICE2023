@@ -100,6 +100,12 @@ class DiceParams():
         #self.lam = self.q
         #self.
 
+        ##Emissions Limits########################
+
+        self._miu2 = 0.10 #Second emission limit 
+
+        ###########################################
+
         ##################################################################
         #Functions
         ##################################################################
@@ -129,6 +135,37 @@ class DiceParams():
         self._abaterat = np.zeros(num_times+1)
         self._miuup = np.zeros(num_times+1)
         self._gbacktime = np.zeros(num_times+1)
+        self._rr = np.zerors(num_times+1) 
+
+        '''PARAMETERS
+        L(t)           Level of population and labor
+        aL(t)          Level of total factor productivity
+        sigma(t)       CO2-emissions output ratio
+        sigmatot(t)    GHG-output ratio
+        gA(t)          Growth rate of productivity from
+        gL(t)          Growth rate of labor and population
+        gcost1         Growth of cost factor
+        gsig(t)        Change in sigma (rate of decarbonization)
+        eland(t)       Emissions from deforestation (GtCO2 per year)
+        cost1tot(T)    Abatement cost adjusted for backstop and sigma
+        pbacktime(t)   Backstop price 2019$ per ton CO2
+        optlrsav       Optimal long-run savings rate used for transversality
+        scc(t)         Social cost of carbon
+        cpricebase(t)  Carbon price in base case
+        ppm(t)         Atmospheric concentrations parts per million
+        atfrac2020(t)  Atmospheric share since 2020
+        atfrac1765(t)  Atmospheric fraction of emissions since 1765
+        abaterat(t)    Abatement cost per net output
+        miuup(t)       Upper bound on miu
+        gbacktime(t)   Decline rate of backstop price
+        '''
+
+        ''' Precautionary dynamic parameters
+        varpcc(t)         Variance of per capita consumption 
+        rprecaut(t)       Precautionary rate of return
+        RR(t)             STP with precautionary factor
+        RR1(t)            STP factor without precautionary factor;
+        '''
 
 
         #Set relevant values using the paramteters above
@@ -136,9 +173,15 @@ class DiceParams():
         self._gA[1] = self._gA1 #Growth rate
         self._al[1] = self._AL1 #Initial total factor productivity
         self._gsig[1] = self._gsigma1 #Initial growth of sigma
+        self._rr[1] = 1.0
+
         #self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
         
-
+        for i in range(2, self._num_times+1):
+            self._l[i] = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Population adjustment over time 
+            self._gA[i] = self._gA1 * np.exp(-self._delA * 5.0 * (self._t[i] - 1.0)) #NEED TO FIGURE OUT WHAT THIS IS 
+            self._al[i] = self._al[i-1] /((1-self._gA[i-1])) #Degradation of productivity??
+            #self._gsig[i] #This function has changed and now wants the min value
 
 
 print("Success")
