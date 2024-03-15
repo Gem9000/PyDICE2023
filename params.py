@@ -5,6 +5,7 @@ Adapted From: domokane dice_params.py
 '''
 
 import numpy as np
+import math
 import csv
 
 class DiceParams():
@@ -116,6 +117,7 @@ class DiceParams():
         self._time_increment = np.arrange(0,self.num_times+1)
 
         #Create size arrays so we can index from 1 instead of 0
+        self._rartp = np.zeros(num_times+1)
         self._l = np.zeros(num_times+1)
         self._al = np.zeros(num_times+1)
         self._sigma = np.zeros(num_times+1)
@@ -136,6 +138,9 @@ class DiceParams():
         self._miuup = np.zeros(num_times+1)
         self._gbacktime = np.zeros(num_times+1)
         self._rr = np.zerors(num_times+1) 
+        self._varpcc = np.zeros(num_times+1)
+        self._rprecaut = np.zeros(num_times+1)
+        self._RR1 = np.zeros(num_times+1)
 
         '''PARAMETERS
         L(t)           Level of population and labor
@@ -176,12 +181,29 @@ class DiceParams():
         self._rr[1] = 1.0
 
         #self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
-        
+        #varpcc(t)       =  min(Siggc1**2*5*(t.val-1),Siggc1**2*5*47);
+
+        self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference 
+
         for i in range(2, self._num_times+1):
+            self._varpcc[i] = min(self._siggc1**2*5*(self._t[i]-1), self._siggc1**2*5*47) #Variance of per capita consumption
+            self._rprecaut[i] = -0.5 * self._varpcc[i-1]* self._elasmu**2 #Precautionary rate of return
+            self._RR1[i] = 1/((1+self._rartp)**(-self._tstep*(self._t[i]-1))) #STP factor without precautionary factor
+            self._rr[i] =   self._RR1[i-1]*(1+ self._rprecaut[i-1]**(self._tstep*(self._t[i] -1)))          #STP factor with precautionary factor 
             self._l[i] = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Population adjustment over time 
-            self._gA[i] = self._gA1 * np.exp(-self._delA * 5.0 * (self._t[i] - 1.0)) #NEED TO FIGURE OUT WHAT THIS IS 
+            self._gA[i] = self._gA1 * np.exp(-self._delA * 5.0 * (self._t[i] - 1)) #NEED TO FIGURE OUT WHAT THIS IS 
             self._al[i] = self._al[i-1] /((1-self._gA[i-1])) #Degradation of productivity??
+            self._cpricebase[i] = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
+            self._pbacktime[i] = self._pback2050 * math.exp(-5*(0.01 if self.t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates the condition found in the 2023 version
             #self._gsig[i] #This function has changed and now wants the min value
+
+        for i in range(18, self._num_times+1):
+            #self._forcoth[i] = self._fex1
+            print("Placeholder")
+             #Optimal long-run savings rate used for transversality (Question)
+        
+        
+        self._optlrsav =(self._dk + 0.004)/(self._dk + 0.004*self._elasmu+ self._rartp)*self._gama
 
 
 print("Success")
