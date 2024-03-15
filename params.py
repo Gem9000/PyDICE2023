@@ -180,10 +180,14 @@ class DiceParams():
         self._gsig[1] = self._gsigma1 #Initial growth of sigma
         self._rr[1] = 1.0
 
-        #self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
+        
         #varpcc(t)       =  min(Siggc1**2*5*(t.val-1),Siggc1**2*5*47);
 
         self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference 
+        
+        #NEED TO ASK ABOUT THIS ONE
+        self._sig1 = (self._e1)/(self._q1*(1-self._miu1))
+        self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
 
         for i in range(2, self._num_times+1):
             self._varpcc[i] = min(self._siggc1**2*5*(self._t[i]-1), self._siggc1**2*5*47) #Variance of per capita consumption
@@ -195,7 +199,9 @@ class DiceParams():
             self._al[i] = self._al[i-1] /((1-self._gA[i-1])) #Degradation of productivity??
             self._cpricebase[i] = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
             self._pbacktime[i] = self._pback2050 * math.exp(-5*(0.01 if self.t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates the condition found in the 2023 version
-            #self._gsig[i] #This function has changed and now wants the min value
+            self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
+            self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
+
 
         for i in range(18, self._num_times+1):
             #self._forcoth[i] = self._fex1
