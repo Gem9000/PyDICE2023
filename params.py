@@ -141,7 +141,6 @@ class DiceParams():
         self._varpcc = np.zeros(num_times+1)
         self._rprecaut = np.zeros(num_times+1)
         self._RR1 = np.zeros(num_times+1)
-
         '''PARAMETERS
         L(t)           Level of population and labor
         aL(t)          Level of total factor productivity
@@ -179,8 +178,8 @@ class DiceParams():
         self._al[1] = self._AL1 #Initial total factor productivity
         self._gsig[1] = self._gsigma1 #Initial growth of sigma
         self._rr[1] = 1.0
-
-        
+        self._miuup[1] = self._miu1
+        self._miuup[2] = self._miu2
         #varpcc(t)       =  min(Siggc1**2*5*(t.val-1),Siggc1**2*5*47);
 
         self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference 
@@ -202,11 +201,20 @@ class DiceParams():
             self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
             self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
 
-
-        for i in range(18, self._num_times+1):
-            #self._forcoth[i] = self._fex1
-            print("Placeholder")
-             
+        #Control logic for the emissions control rate
+        for i in range(3, self._num_times+1):
+            if self._t[i]> 2:
+                self._miuup[i] = (self._delmiumax*(self._t[i]-1))
+            if self._t[i] > 8:
+                self._miuup[i] = (0.85 + 0.05 * (self._t[i]-8))
+            if self._t[i] > 11:
+                self._miuup[i] = self._limmiu2070
+            if self._t[i] > 20:
+                self._miuup[i] = self._limmiu2120
+            if self._t[i] > 37:
+                self._miuup[i] = self._limmiu2200
+            if self._t[i] > 57:
+                self._miuup[t] = self._limmiu2300
              
         
         #Optimal long-run savings rate used for transversality (Question)
