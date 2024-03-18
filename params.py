@@ -228,6 +228,7 @@ class DiceParams():
             header = []
             header.append("PERIOD")
             header.append("L")
+            header.append("aL")
             header.append("GA")
             header.append("AL")
             header.append("GSIG")
