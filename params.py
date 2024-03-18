@@ -206,10 +206,76 @@ class DiceParams():
         for i in range(18, self._num_times+1):
             #self._forcoth[i] = self._fex1
             print("Placeholder")
-             #Optimal long-run savings rate used for transversality (Question)
+             
+             
         
-        
+        #Optimal long-run savings rate used for transversality (Question)
         self._optlrsav =(self._dk + 0.004)/(self._dk + 0.004*self._elasmu+ self._rartp)*self._gama
+
+        if 1==1:
+
+            f = open("./results/parameters.csv" , mode = "w", newline='')
+            writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        
+            header = []
+            header.append("PERIOD")
+            header.append("L")
+            header.append("GA")
+            header.append("AL")
+            header.append("GSIG")
+            header.append("SIGMA")
+            header.append("PBACKTIME")
+            header.append("COST1")
+            header.append("ETREE")
+            header.append("CUMETREE")
+            header.append("RR")
+            header.append("CPRICEBASE")
+            writer.writerow(header)
+            
+            num_rows = self._num_times + 1
+        
+            for i in range(0, num_rows):
+                row = []
+                row.append(i)
+                row.append(self._l[i])
+                row.append(self._ga[i])
+                row.append(self._al[i])
+                row.append(self._gsig[i])
+                row.append(self._sigma[i])
+                row.append(self._pbacktime[i])
+                row.append(self._cost1[i])
+                row.append(self._etree[i])
+                row.append(self._cumetree[i])
+                row.append(self._rr[i])
+                row.append(self._cpricebase[i])
+
+                writer.writerow(row)
+
+            f.close()
+
+        elif 1==2:
+
+            print("Labour:", self._l) # CHECKED OK
+            print("Growth rate of productivity", self._ga) # CHECKED OK
+            print("Productivity", self._al) # CHECKED OK
+            print("CO2 output ratio:", self._sigma) # CHECKED OK
+            print("Change in sigma", self._gsig) # CHECKED OK
+            print("Cumulative from land", self._cumetree) # CHECKED BUT UNSURE ABOUT INITIAL PRICE SOURCE OF 100
+            print("Adjusted cost backstop", self._cost1) # CHECKED OK
+            print("Backstop price", self._pbacktime) # CHECKED OK
+            print("Emissions deforestation", self._etree) # CHECKED OK
+            print("Utility social rate discount factor", self._rr) # CANNOT SEE ON NORDHAUS ??
+            print("Carbon price based case", self._cpricebase) # AGREES WITH NORDHAUS UNTIL 2235 ??
+            print("Exogenous forcing others", self._forcoth) # CHECKED OK
+            print("Long run savings rate", self._optlrsav) # CHECKED OK
+
+        else:
+            print("SOME CHECKING TO BE DONE")
+ 
+###############################################################################
+
+    def runModel(self):
+        pass
 
 
 print("Success")
