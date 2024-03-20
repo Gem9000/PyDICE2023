@@ -179,11 +179,17 @@ class DiceParams():
         self._al[1] = self._AL1 #Initial total factor productivity
         self._gsig[1] = self._gsigma1 #Initial growth of sigma
         self._rr[1] = 1.0
-
-        #self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
+        
+        self._miuup[1] = self._miu1
+        self._miuup[2] = self._miu2
         #varpcc(t)       =  min(Siggc1**2*5*(t.val-1),Siggc1**2*5*47);
 
         self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference 
+        
+        #NEED TO ASK ABOUT THIS ONE
+        self._sig1 = (self._e1)/(self._q1*(1-self._miu1))
+        self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
+
 
         for i in range(2, self._num_times+1):
             self._varpcc[i] = min(self._siggc1**2*5*(self._t[i]-1), self._siggc1**2*5*47) #Variance of per capita consumption
@@ -195,6 +201,95 @@ class DiceParams():
             self._al[i] = self._al[i-1] /((1-self._gA[i-1])) #Degradation of productivity??
             self._cpricebase[i] = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
             self._pbacktime[i] = self._pback2050 * math.exp(-5*(0.01 if self.t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates the condition found in the 2023 version
+
+            self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
+            self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
+
+        #Control logic for the emissions control rate
+        for i in range(3, self._num_times+1):
+            if self._t[i]> 2:
+                self._miuup[i] = (self._delmiumax*(self._t[i]-1))
+            if self._t[i] > 8:
+                self._miuup[i] = (0.85 + 0.05 * (self._t[i]-8))
+            if self._t[i] > 11:
+                self._miuup[i] = self._limmiu2070
+            if self._t[i] > 20:
+                self._miuup[i] = self._limmiu2120
+            if self._t[i] > 37:
+                self._miuup[i] = self._limmiu2200
+            if self._t[i] > 57:
+                self._miuup[t] = self._limmiu2300
+             
+        
+        #Optimal long-run savings rate used for transversality (Question)
+        self._optlrsav =(self._dk + 0.004)/(self._dk + 0.004*self._elasmu+ self._rartp)*self._gama
+
+        if 1==1:
+
+            f = open("./results/parameters.csv" , mode = "w", newline='')
+            writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        
+            header = []
+            header.append("PERIOD")
+            header.append("L")
+            header.append("aL")
+            header.append("GA")
+            header.append("AL")
+            header.append("GSIG")
+            header.append("SIGMA")
+            header.append("PBACKTIME")
+            header.append("COST1")
+            header.append("ETREE")
+            header.append("CUMETREE")
+            header.append("RR")
+            header.append("CPRICEBASE")
+            writer.writerow(header)
+            
+            num_rows = self._num_times + 1
+        
+            for i in range(0, num_rows):
+                row = []
+                row.append(i)
+                row.append(self._l[i])
+                row.append(self._ga[i])
+                row.append(self._al[i])
+                row.append(self._gsig[i])
+                row.append(self._sigma[i])
+                row.append(self._pbacktime[i])
+                row.append(self._cost1[i])
+                row.append(self._etree[i])
+                row.append(self._cumetree[i])
+                row.append(self._rr[i])
+                row.append(self._cpricebase[i])
+
+                writer.writerow(row)
+
+            f.close()
+
+        elif 1==2:
+
+            print("Labour:", self._l) # CHECKED OK
+            print("Growth rate of productivity", self._ga) # CHECKED OK
+            print("Productivity", self._al) # CHECKED OK
+            print("CO2 output ratio:", self._sigma) # CHECKED OK
+            print("Change in sigma", self._gsig) # CHECKED OK
+            print("Cumulative from land", self._cumetree) # CHECKED BUT UNSURE ABOUT INITIAL PRICE SOURCE OF 100
+            print("Adjusted cost backstop", self._cost1) # CHECKED OK
+            print("Backstop price", self._pbacktime) # CHECKED OK
+            print("Emissions deforestation", self._etree) # CHECKED OK
+            print("Utility social rate discount factor", self._rr) # CANNOT SEE ON NORDHAUS ??
+            print("Carbon price based case", self._cpricebase) # AGREES WITH NORDHAUS UNTIL 2235 ??
+            print("Exogenous forcing others", self._forcoth) # CHECKED OK
+            print("Long run savings rate", self._optlrsav) # CHECKED OK
+
+        else:
+            print("SOME CHECKING TO BE DONE")
+ 
+###############################################################################
+
+    def runModel(self):
+        pass
+
             #self._gsig[i] #This function has changed and now wants the min value
 
         for i in range(18, self._num_times+1):
