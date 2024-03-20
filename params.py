@@ -141,6 +141,7 @@ class DiceParams():
         self._varpcc = np.zeros(num_times+1)
         self._rprecaut = np.zeros(num_times+1)
         self._RR1 = np.zeros(num_times+1)
+
         '''PARAMETERS
         L(t)           Level of population and labor
         aL(t)          Level of total factor productivity
@@ -186,20 +187,20 @@ class DiceParams():
         
         #NEED TO ASK ABOUT THIS ONE
         self._sig1 = (self._e1)/(self._q1*(1-self._miu1))
-        self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
+        self._sigma[1] = self._sig1 
 
         for i in range(2, self._num_times+1):
             self._varpcc[i] = min(self._siggc1**2*5*(self._t[i]-1), self._siggc1**2*5*47) #Variance of per capita consumption
             self._rprecaut[i] = -0.5 * self._varpcc[i-1]* self._elasmu**2 #Precautionary rate of return
             self._RR1[i] = 1/((1+self._rartp)**(-self._tstep*(self._t[i]-1))) #STP factor without precautionary factor
-            self._rr[i] =   self._RR1[i-1]*(1+ self._rprecaut[i-1]**(self._tstep*(self._t[i] -1)))          #STP factor with precautionary factor 
-            self._l[i] = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Population adjustment over time 
-            self._gA[i] = self._gA1 * np.exp(-self._delA * 5.0 * (self._t[i] - 1)) #NEED TO FIGURE OUT WHAT THIS IS 
-            self._al[i] = self._al[i-1] /((1-self._gA[i-1])) #Degradation of productivity??
+            self._rr[i] =   self._RR1[i-1]*(1+ self._rprecaut[i-1]**(self._tstep*(self._t[i] -1))) #STP factor with precautionary factor 
+            self._l[i] = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Level of population and labor 
+            self._gA[i] = self._gA1 * np.exp(-self._delA * 5.0 * (self._t[i] - 1)) #Growth rate of productivity
+            self._al[i] = self._al[i-1] /((1-self._gA[i-1])) #Level of total factor productivity
             self._cpricebase[i] = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
             self._pbacktime[i] = self._pback2050 * math.exp(-5*(0.01 if self.t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates the condition found in the 2023 version
             self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
-            self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
+            self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1]) #CO2-emissions output ratio
 
         #Control logic for the emissions control rate
         for i in range(3, self._num_times+1):
@@ -227,18 +228,17 @@ class DiceParams():
         
             header = []
             header.append("PERIOD")
+            header.append("VARPCC")
+            header.append("RPRECAUT")
+            header.append("RR1")
+            header.append("RR")
             header.append("L")
-            header.append("aL")
             header.append("GA")
             header.append("AL")
+            header.append("CPRICEBASE")
+            header.append("PBACKTIME")
             header.append("GSIG")
             header.append("SIGMA")
-            header.append("PBACKTIME")
-            header.append("COST1")
-            header.append("ETREE")
-            header.append("CUMETREE")
-            header.append("RR")
-            header.append("CPRICEBASE")
             writer.writerow(header)
             
             num_rows = self._num_times + 1
@@ -246,36 +246,34 @@ class DiceParams():
             for i in range(0, num_rows):
                 row = []
                 row.append(i)
+                row.append(self._varpcc[i])
+                row.append(self._rprecaut[i])
+                row.append(self._RR1[i])
+                row.append(self._rr[i])
                 row.append(self._l[i])
-                row.append(self._ga[i])
+                row.append(self._gA[i])
                 row.append(self._al[i])
+                row.append(self._cpricebase[i])
+                row.append(self._pbacktime[i])
                 row.append(self._gsig[i])
                 row.append(self._sigma[i])
-                row.append(self._pbacktime[i])
-                row.append(self._cost1[i])
-                row.append(self._etree[i])
-                row.append(self._cumetree[i])
-                row.append(self._rr[i])
-                row.append(self._cpricebase[i])
 
                 writer.writerow(row)
 
             f.close()
 
         elif 1==2:
-
+            print("Variance of per capita consumption:", self._varpcc)
+            print("Precationary rate of return:",self._rprecaut)
+            print("STP factor without precationary factor:",self._RR1)
+            print("STP factor with precationary factor:",self.rr)
             print("Labour:", self._l) # CHECKED OK
-            print("Growth rate of productivity", self._ga) # CHECKED OK
+            print("Growth rate of productivity", self._gA) # CHECKED OK
             print("Productivity", self._al) # CHECKED OK
-            print("CO2 output ratio:", self._sigma) # CHECKED OK
-            print("Change in sigma", self._gsig) # CHECKED OK
-            print("Cumulative from land", self._cumetree) # CHECKED BUT UNSURE ABOUT INITIAL PRICE SOURCE OF 100
-            print("Adjusted cost backstop", self._cost1) # CHECKED OK
-            print("Backstop price", self._pbacktime) # CHECKED OK
-            print("Emissions deforestation", self._etree) # CHECKED OK
-            print("Utility social rate discount factor", self._rr) # CANNOT SEE ON NORDHAUS ??
             print("Carbon price based case", self._cpricebase) # AGREES WITH NORDHAUS UNTIL 2235 ??
-            print("Exogenous forcing others", self._forcoth) # CHECKED OK
+            print("Backstop price", self._pbacktime) # CHECKED OK
+            print("Change in sigma", self._gsig) # CHECKED OK
+            print("CO2 output ratio:", self._sigma) # CHECKED OK
             print("Long run savings rate", self._optlrsav) # CHECKED OK
 
         else:
