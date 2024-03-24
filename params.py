@@ -266,7 +266,7 @@ class DiceParams():
             print("Variance of per capita consumption:", self._varpcc)
             print("Precationary rate of return:",self._rprecaut)
             print("STP factor without precationary factor:",self._RR1)
-            print("STP factor with precationary factor:",self.rr)
+            print("STP factor with precationary factor:",self._rr)
             print("Labour:", self._l) # CHECKED OK
             print("Growth rate of productivity", self._gA) # CHECKED OK
             print("Productivity", self._al) # CHECKED OK
@@ -286,3 +286,4 @@ class DiceParams():
 
 
 print("Success")
+spl
