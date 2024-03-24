@@ -377,6 +377,7 @@ class DiceParams():
         #UTILEQ =  np.zeros(num_times+1)        #Objective function
 
 #Fixed initial values
+     
 
 
 
