@@ -323,21 +323,60 @@ class DiceParams():
     
 ###############################################################################
 # Set the optimisation variables
-###########################################################################
+###############################################################################
 
         for i in range(1, num_times+1):
-            MIUopt[i] = x[i-1]
-            Sopt[i] = x[num_times + i-1]
+            MIUopt[i] = x[i-1]          #Optimal emissions control rate GHGS
+            Sopt[i] = x[num_times + i-1]   #Gross savings rate as fraction of gross world product
     
 ###########################################################################
+#Variabls and nonnegative variables equations
+###########################################################################
 
+        C = np.zeros(num_times+1)              #Consumption (trillions 2019 US dollars per year)
+        K = np.zeros(num_times+1)              #Capital stock (trillions 2019 US dollars)
+        CPC = np.zeros(num_times+1)            #Per capita consumption (thousands 2019 USD per year)
+        I =  np.zeros(num_times+1)             #Investment (trillions 2019 USD per year)
+        Y  = np.zeros(num_times+1)             #Gross world product net of abatement and damages (trillions 2019 USD per year)
+        YGROSS = np.zeros(num_times+1)         #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
+        YNET  = np.zeros(num_times+1)          #Output net of damages equation (trillions 2019 USD per year)
+        DAMAGES = np.zeros(num_times+1)        #Damages (trillions 2019 USD per year)
+        DAMFRAC = np.zeros(num_times+1)        #Damages as fraction of gross output
+        ABATECOST = np.zeros(num_times+1)      #Cost of emissions reductions  (trillions 2019 USD per year)
+        MCABATE  = np.zeros(num_times+1)       #Marginal cost of abatement (2019$ per ton CO2)
+        CCATOT  = np.zeros(num_times+1)        #Total carbon emissions (GtC)
+        PERIODU  = np.zeros(num_times+1)       #One period utility function
+        CPRICE   =  np.zeros(num_times+1)      #Carbon price (2019$ per ton of CO2)
+        TOTPERIODU = np.zeros(num_times+1)     #Period utility
+        #UTILITY    = np.zeros(num_times+1)    #Welfare function
+        RFACTLONG = np.zeros(num_times+1)
+        RSHORT    = np.zeros(num_times+1)      #Real interest rate with precautionary(per annum year on year)
+        RLONG   = np.zeros(num_times+1)        #Real interest rate from year 0 to T
 
+#Emissions and Damages
+        CCATOTEQ = np.zeros(num_times+1)       #Cumulative total carbon emissions
+        DAMFRACEQ = np.zeros(num_times+1)      #Equation for damage fraction
+        DAMEQ = np.zeros(num_times+1)          #Damage equation
+        ABATEEQ = np.zeros(num_times+1)        #Cost of emissions reductions equation
+        MCABATEEQ = np.zeros(num_times+1)      #Equation for MC abatement
+        CARBPRICEEQ = np.zeros(num_times+1)    #Carbon price equation from abatement
+#Economic variables
+        YGROSSEQ = np.zeros(num_times+1)       #Output gross equation
+        YNETEQ = np.zeros(num_times+1)         #Output net of damages equation
+        YY = np.zeros(num_times+1)             #Output net equation
+        CC = np.zeros(num_times+1)             #Consumption equation
+        CPCE = np.zeros(num_times+1)           #Per capita consumption definition
+        SEQ = np.zeros(num_times+1)            #Savings rate equation
+        KK =  np.zeros(num_times+1)            #Capital balance equation
+        RSHORTEQ = np.zeros(num_times+1)       #Short-run interest rate equation
+        RLONGEQ = np.zeros(num_times+1)        #Long-run interest rate equation
+        RFACTLONGEQ = np.zeros(num_times+1)    #Long interest factor
+#Utility
+        TOTPERIODUEQ = np.zeros(num_times+1)   #Period utility
+        PERIODUEQ = np.zeros(num_times+1)      #Instantaneous utility function equation
+        #UTILEQ =  np.zeros(num_times+1)        #Objective function
 
-
-
-
-
-
+#Fixed initial values
 
 
 
