@@ -1,12 +1,33 @@
 '''
 Created 02/23/2024 
 Author: George Moraites
-Adapted From: domokane dice_params.py
+Adapted From: domokane DICEModel.py
 '''
 
 import numpy as np
 import math
 import csv
+
+'''
+Adding in new imports for the DICE Model Portion
+'''
+from numba import njit
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import seaborn
+seaborn.set_theme(style='ticks')
+
+###############################################################################
+
+@njit(cache=True, fastmath=True)
+def objFn(x, *args):
+    """ This is the pass-through function that returns a single float value of
+    the objective function for the benefit of the optimisation algorithm. """
+
+    #out = simulateDynamics(x, *args)
+    return out[0, 0]
+
+###############################################################################
 
 class DiceParams():
 
@@ -216,10 +237,6 @@ class DiceParams():
             if self._t[i] > 57:
                 self._miuup[t] = self._limmiu2300
              
-        
-        #Optimal long-run savings rate used for transversality (Question)
-        self._optlrsav =(self._dk + 0.004)/(self._dk + 0.004*self._elasmu+ self._rartp)*self._gama
-
         if 1==1:
 
             f = open("./results/parameters.csv" , mode = "w", newline='')
@@ -227,17 +244,17 @@ class DiceParams():
         
             header = []
             header.append("PERIOD")
+            header.append("VARPCC")
+            header.append("RPRECAUT")
+            header.append("RR1")
+            header.append("RR")
             header.append("L")
             header.append("GA")
             header.append("AL")
+            header.append("CPRICEBASE")
+            header.append("PBACKTIME")
             header.append("GSIG")
             header.append("SIGMA")
-            header.append("PBACKTIME")
-            header.append("COST1")
-            header.append("ETREE")
-            header.append("CUMETREE")
-            header.append("RR")
-            header.append("CPRICEBASE")
             writer.writerow(header)
             
             num_rows = self._num_times + 1
@@ -245,42 +262,98 @@ class DiceParams():
             for i in range(0, num_rows):
                 row = []
                 row.append(i)
+                row.append(self._varpcc[i])
+                row.append(self._rprecaut[i])
+                row.append(self._RR1[i])
+                row.append(self._rr[i])
                 row.append(self._l[i])
-                row.append(self._ga[i])
+                row.append(self._gA[i])
                 row.append(self._al[i])
+                row.append(self._cpricebase[i])
+                row.append(self._pbacktime[i])
                 row.append(self._gsig[i])
                 row.append(self._sigma[i])
-                row.append(self._pbacktime[i])
-                row.append(self._cost1[i])
-                row.append(self._etree[i])
-                row.append(self._cumetree[i])
-                row.append(self._rr[i])
-                row.append(self._cpricebase[i])
 
                 writer.writerow(row)
 
             f.close()
 
         elif 1==2:
-
+            print("Variance of per capita consumption:", self._varpcc)
+            print("Precationary rate of return:",self._rprecaut)
+            print("STP factor without precationary factor:",self._RR1)
+            print("STP factor with precationary factor:",self._rr)
             print("Labour:", self._l) # CHECKED OK
-            print("Growth rate of productivity", self._ga) # CHECKED OK
+            print("Growth rate of productivity", self._gA) # CHECKED OK
             print("Productivity", self._al) # CHECKED OK
-            print("CO2 output ratio:", self._sigma) # CHECKED OK
-            print("Change in sigma", self._gsig) # CHECKED OK
-            print("Cumulative from land", self._cumetree) # CHECKED BUT UNSURE ABOUT INITIAL PRICE SOURCE OF 100
-            print("Adjusted cost backstop", self._cost1) # CHECKED OK
-            print("Backstop price", self._pbacktime) # CHECKED OK
-            print("Emissions deforestation", self._etree) # CHECKED OK
-            print("Utility social rate discount factor", self._rr) # CANNOT SEE ON NORDHAUS ??
             print("Carbon price based case", self._cpricebase) # AGREES WITH NORDHAUS UNTIL 2235 ??
-            print("Exogenous forcing others", self._forcoth) # CHECKED OK
+            print("Backstop price", self._pbacktime) # CHECKED OK
+            print("Change in sigma", self._gsig) # CHECKED OK
+            print("CO2 output ratio:", self._sigma) # CHECKED OK
             print("Long run savings rate", self._optlrsav) # CHECKED OK
 
         else:
             print("SOME CHECKING TO BE DONE")
- 
+
+
+
+   #    @njit(cache=True, fastmath=True)
+    def simulateDynamics(self, x, sign, outputType, num_times,
+                         tstep, al, ll, sigma, cumetree, forcoth,
+                         cost1, etree,
+                         scale1, scale2,
+                         ml0, mu0, mat0, cca0,
+                         a1, a2, a3,
+                         c1, c3, c4,
+                         b11, b12, b21, b22, b32, b23, b33,
+                         fco22x, t2xco2, rr, gama,
+                         tocean0, tatm0, elasmu, prstp, expcost2,
+                         k0, dk, pbacktime):
+        """ This is the simulation of the DICE 2016 model dynamics. It is optimised
+        for speed. For this reason I have avoided the use of classes. """
+    
+        LOG2 = np.log(2)
+        L = ll  # NORDHAUS RENAMES IT TO UPPER CASE IN EQUATIONS
+        MILLE = 1000.0  ######NEED TO LOOK AT THIS##############
+    
+        # We take care to ensure that the indexing starts at 1 to allow comparison
+        # with matlab
+        MIUopt = np.zeros(num_times+1)
+        Sopt = np.zeros(num_times+1)
+    
 ###############################################################################
+# Set the optimisation variables
+###########################################################################
+
+        for i in range(1, num_times+1):
+            MIUopt[i] = x[i-1]
+            Sopt[i] = x[num_times + i-1]
+    
+###########################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def runModel(self):
         pass

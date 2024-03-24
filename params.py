@@ -286,4 +286,3 @@ class DiceParams():
 
 
 print("Success")
-spl
