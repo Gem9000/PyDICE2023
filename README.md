@@ -2,6 +2,8 @@
 
 The following is a python3 implementation of the 2023 DICE model created by Nordhaus. 
 
+Reflects 03/25/2024 Packages
+
 The packages and versions used in this implementation are: 
 |Package          | Version   |
 |-----------------|-----------|
