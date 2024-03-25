@@ -3,6 +3,13 @@
 The following is a python3 implementation of the 2023 DICE model created by Nordhaus. 
 
 The packages and versions used in this implementation are: 
+| Package Name | Version |
+|--------------|---------|
+| Package A    | 1.0.0   |
+| Package B    | 2.1.3   |
+| Package C    | 3.2.5   |
+
+
 asttokens         2.4.1
 comm              0.2.1
 contourpy         1.2.0
