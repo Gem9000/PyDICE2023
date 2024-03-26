@@ -308,7 +308,7 @@ class DiceParams():
                          b11, b12, b21, b22, b32, b23, b33,
                          fco22x, t2xco2, rr, gama,
                          tocean0, tatm0, elasmu, prstp, expcost2,
-                         k0, dk, pbacktime):
+                         k0, dk, pbacktime, CumEmiss0):
         """ This is the simulation of the DICE 2016 model dynamics. It is optimised
         for speed. For this reason I have avoided the use of classes. """
     
@@ -352,6 +352,7 @@ class DiceParams():
         RFACTLONG = np.zeros(num_times+1)
         RSHORT    = np.zeros(num_times+1)      #Real interest rate with precautionary(per annum year on year)
         RLONG   = np.zeros(num_times+1)        #Real interest rate from year 0 to T
+        EIND = np.zeros(num_times+1)           #Industrial Emissions (GtCO2 per year)
 
 #Emissions and Damages
         CCATOTEQ = np.zeros(num_times+1)       #Cumulative total carbon emissions
@@ -376,10 +377,33 @@ class DiceParams():
         PERIODUEQ = np.zeros(num_times+1)      #Instantaneous utility function equation
         #UTILEQ =  np.zeros(num_times+1)        #Objective function
 
-#Fixed initial values
-     
+#Fixed initial values(depricated in the 2023 version included for now)
+    #MAT[1] = mat0
+    #ML[1] = ml0
+    #MU[1] = mu0
+    #TATM[1] = tatm0
+    #TOCEAN[1] = tocean0
+    #K[1] = k0
+    #CCATOT[1] = CumEmiss0
+
+###################################Initilizing Equations#################################
+        
 
 
+
+
+
+        YGROSS[1] = al[1] * ((L[1]/MILLE)**(1.0-gama)) * K[1]**gama
+        EIND[1] = sigma[1] * YGROSS[1] * (1.0 - MIUopt[1])
+        CCATOT[1] = CCATOT[1] 
+        CCA[1] = cca0  # DOES NOT START TILL PERIOD 2
+        CCATOT[1] = CCA[1] + cumetree[1]
+        FORC[1] = fco22x * np.log(MAT[1]/588.000)/LOG2 + forcoth[1]
+        DAMFRAC[1] = a1*TATM[1] + a2*TATM[1]**a3
+        DAMAGES[1] = YGROSS[1] * DAMFRAC[1]
+        ABATECOST[1] = YGROSS[1] * cost1[1] * MIUopt[1]**expcost2
+        MCABATE[1] = pbacktime[1] * MIUopt[1]**(expcost2-1)
+        CPRICE[1] = pbacktime[1] * (MIUopt[1])**(expcost2-1)
 
 
 
