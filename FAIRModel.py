@@ -8,6 +8,8 @@ import numpy as np
 import math
 import csv
 
+from scipy.optimize import fsolve
+
 '''
 ** Equals old FAIR with recalibrated parameters for revised F2xco2 and Millar model.
 ** Deletes nonnegative reservoirs. See explanation below
@@ -130,8 +132,7 @@ class FAIRParams():
         self._tatmeq = np.zeros(num_times+1)
         self._irfeqlhs = np.zeros(num_times+1)
         self._irfeqrhs = np.zeros(num_times+1)
-
-
+        
         #Initial conditions
         self._mateq[1] = self._mat0
         self._tatmeq[1] = self._tatm0
@@ -142,12 +143,43 @@ class FAIRParams():
         self._tbox1eq[1] = self._tbox10
         self._tbox2eq[1] = self._tbox2eq
 
-        for i in range (2, self._num_times+1):
-            print("Success")
+
+#Create a function to implicitly solve the 
+    def solve_alpha(self, t):
+        # Define the equation for IRFt(t) using the given parameters and functions
+        def equation(alpha):
+            return ((alpha * self._emshare0 * self._tau0 * (1 - np.exp(-100 / (alpha * self._tau0)))) +
+                    (alpha * self._emshare1 * self._tau1 * (1 - np.exp(-100 / (alpha * self._tau1)))) +
+                    (alpha * self._emshare2 * self._tau2 * (1 - np.exp(-100 / (alpha * self._tau2)))) +
+                    (alpha * self._emshare3 * self._tau3 * (1 - np.exp(-100 / (alpha * self._tau3))))) - \
+                   (self._irf0 + self._irC * self._cacceq(t) + self._irT * self._tatmeq(t))
+
+        # Use fsolve to solve for alpha
+        alpha_initial_guess = 1.0
+        alpha_solution = fsolve(equation, alpha_initial_guess, bounds = (0.1, 100))
+        return alpha_solution
 
 
-        
     def runModel(self):
-        pass
+        for i in range(2, self._num_times + 1):
+
+            #Solve for alpha(t) in each time period 
+
+            self._cacceq = 
+            self._tatmeq = 
+
+            self._res0lom =
+            self._res1lom =
+            self._res2lom = 
+            self._res3lom = 
+            self._mmat = 
+            
+            self._force = 
+            self._tbox1eq = 
+            self._tbox2eq = 
+             
+            self._irfeqlhs = 
+            self._irfeqrhs = 
+            pass
 
 print("Success")
