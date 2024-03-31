@@ -132,7 +132,7 @@ class FAIRParams():
         self._tatmeq = np.zeros(num_times+1)
         self._irfeqlhs = np.zeros(num_times+1)
         self._irfeqrhs = np.zeros(num_times+1)
-        
+
         #Initial conditions
         self._mateq[1] = self._mat0
         self._tatmeq[1] = self._tatm0
@@ -165,21 +165,21 @@ class FAIRParams():
 
             #Solve for alpha(t) in each time period 
 
-            self._cacceq = 
-            self._tatmeq = 
+            #self._cacceq = 
+            #self._tatmeq = 
 
-            self._res0lom =
-            self._res1lom =
-            self._res2lom = 
-            self._res3lom = 
-            self._mmat = 
+            #self._res0lom =
+            #self._res1lom =
+            #self._res2lom = 
+            #self._res3lom = 
+            #self._mmat = 
             
-            self._force = 
-            self._tbox1eq = 
-            self._tbox2eq = 
+            #self._force = 
+            #self._tbox1eq = 
+            #self._tbox2eq = 
              
-            self._irfeqlhs = 
-            self._irfeqrhs = 
+            #self._irfeqlhs = 
+            #self._irfeqrhs = 
             pass
 
 print("Success")
