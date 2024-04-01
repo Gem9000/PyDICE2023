@@ -114,7 +114,7 @@ class DiceParams():
         #Num times should be 81
         #time increment should be 5 years
         self._num_times = num_times
-        self._time_increment = np.arrange(0,self.num_times+1)
+        self._t = np.arange(0,num_times+1)
 
         #Create size arrays so we can index from 1 instead of 0
         self._rartp = np.zeros(num_times+1)
@@ -137,7 +137,7 @@ class DiceParams():
         self._abaterat = np.zeros(num_times+1)
         self._miuup = np.zeros(num_times+1)
         self._gbacktime = np.zeros(num_times+1)
-        self._rr = np.zerors(num_times+1) 
+        self._rr = np.zeros(num_times+1) 
         self._varpcc = np.zeros(num_times+1)
         self._rprecaut = np.zeros(num_times+1)
         self._RR1 = np.zeros(num_times+1)
@@ -198,7 +198,7 @@ class DiceParams():
             self._gA[i] = self._gA1 * np.exp(-self._delA * 5.0 * (self._t[i] - 1)) #Growth rate of productivity
             self._al[i] = self._al[i-1] /((1-self._gA[i-1])) #Level of total factor productivity
             self._cpricebase[i] = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
-            self._pbacktime[i] = self._pback2050 * math.exp(-5*(0.01 if self.t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates the condition found in the 2023 version
+            self._pbacktime[i] = self._pback2050 * math.exp(-5*(0.01 if self._t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates the condition found in the 2023 version
             self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
             self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1]) #CO2-emissions output ratio
 
@@ -215,7 +215,7 @@ class DiceParams():
             if self._t[i] > 37:
                 self._miuup[i] = self._limmiu2200
             if self._t[i] > 57:
-                self._miuup[t] = self._limmiu2300
+                self._miuup[i] = self._limmiu2300
              
         
         #Optimal long-run savings rate used for transversality (Question)
