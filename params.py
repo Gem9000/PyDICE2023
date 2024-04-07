@@ -172,7 +172,6 @@ class DiceParams():
         RR1(t)            STP factor without precautionary factor;
         '''
 
-
         #Set relevant values using the paramteters above
         self._l[1] = self._pop1 #Population 
         self._gA[1] = self._gA1 #Growth rate

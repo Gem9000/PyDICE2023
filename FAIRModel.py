@@ -134,6 +134,17 @@ class FAIRParams():
         self._irfeqrhs = np.zeros(num_times+1)
         self._alpha_t = np.zeros(num_times+1)
 
+        #Filler for the model
+        self._F_Misc = np.zeros(num_times+1)
+
+        #Fillers for equations that are in the DICE model equation
+        self._eco2 = np.zeros(num_times+1)
+        self._F_GHGabate = np.zeros(num_times+1)
+        self._CCATOT = np.zeros(num_times+1)
+        
+        #Timestep counter
+        self._t = np.arange(0,num_times+1)
+
         #Initial conditions
         self._mateq[1] = self._mat0
         self._tatmeq[1] = self._tatm0
@@ -168,23 +179,45 @@ class FAIRParams():
         for i in range(2, self._num_times + 1):
 
             #Solve for alpha(t) in each time period 
-            self._alpha_t = self.solve_alpha(i)
+            self._alpha_t[i+1] = self.solve_alpha(i)
 
-            self._cacceq = (CCATOT[i] - (MAT[i] - mateq))
-            self._tatmeq = 
-
-            self._res0lom = (self._emshare0*self._tau0*self.solve_alpha(i+1))
-            self._res1lom =
-            self._res2lom = 
-            self._res3lom = 
-            self._mmat = 
+            self._res0lom[i+1] = (self._emshare0 * self._tau0 * self.solve_alpha(i+1) * 
+                                  (self._eco2[i+1] / 3.667) * 
+                                  (1 - math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i+1)))) + 
+                                   self._res0lom[i] * math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i+1))))
             
-            self._force = 
-            self._tbox1eq = 
-            self._tbox2eq = 
+            self._res1lom[i+1] = (self._emshare1 * self._tau1 * self.solve_alpha(i+1) * 
+                                  (self._eco2[i+1] / 3.667) * 
+                                  (1 - math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1)))) + 
+                                   self._res1lom[i] * math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1))))
+            
+            self._res2lom[i+1] = (self._emshare2 * self._tau2 * self.solve_alpha(i+1) * 
+                                  (self._eco2[i+1] / 3.667) * 
+                                  (1 - math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1)))) + 
+                                   self._res2lom[i] * math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1))))
+           
+            self._res3lom[i+1] = (self._emshare3 * self._tau3 * self.solve_alpha(i+1) * 
+                                  (self._eco2[i+1] / 3.667) * 
+                                  (1 - math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1)))) + 
+                                   self._res3lom[i] * math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1))))
+            
+            self._mmat[i+1] = self._mateq + self._res0lom[i+1] + self._res1lom[i+1] + self._res2lom[i+1] + self._res3lom[i+1]
              
-            self._irfeqlhs = 
-            self._irfeqrhs = 
+            self._force[i] = (self._fco22x * (math.log((self._mmat[i]/self._mateq))/math.log(2)) 
+                              + self._F_Misc[i] + self._F_GHGabate[i])
+            
+            self._tbox1eq[i+1] = (self._tbox1eq[i] *
+                                  math.exp(self._tstep/self._d1) + self._teq1 *
+                                  self._force[i+1] * (1-math.exp(self._tstep/self._d1)))  
+            
+            self._tbox2eq[i+1] = (self._tbox2eq[i] *
+                                  math.exp(self._tstep/self._d2) + self._teq2 *
+                                  self._force[i+1] * (1-math.exp(self._tstep/self._d2)))
+            
+            self._tatmeq[i+1] = self._tbox1eq[i+1] + self._tbox2eq[i+1]
+
+            self._cacceq[i] = (self._CCATOT[i] - (self._mateq[i] - self._mateq))
+             
             pass
 
 print("Success")
