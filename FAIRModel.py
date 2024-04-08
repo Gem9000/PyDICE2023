@@ -154,10 +154,114 @@ class FAIRParams():
         self._res3lom[1] = self._res30
         self._tbox1eq[1] = self._tbox10
         self._tbox2eq[1] = self._tbox2eq
+    
+        for i in range(2, self._num_times + 1):
+
+        #Solve for alpha(t) in each time period 
+        self._alpha_t[i+1] = self.solve_alpha(i)
+
+        self._res0lom[i+1] = (self._emshare0 * self._tau0 * self.solve_alpha(i+1) * 
+                                (self._eco2[i+1] / 3.667) * 
+                                (1 - math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i+1)))) + 
+                                self._res0lom[i] * math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i+1))))
+
+        self._res1lom[i+1] = (self._emshare1 * self._tau1 * self.solve_alpha(i+1) * 
+                                (self._eco2[i+1] / 3.667) * 
+                                (1 - math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1)))) + 
+                                self._res1lom[i] * math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1))))
+
+        self._res2lom[i+1] = (self._emshare2 * self._tau2 * self.solve_alpha(i+1) * 
+                                (self._eco2[i+1] / 3.667) * 
+                                (1 - math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1)))) + 
+                                self._res2lom[i] * math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1))))
+
+        self._res3lom[i+1] = (self._emshare3 * self._tau3 * self.solve_alpha(i+1) * 
+                                (self._eco2[i+1] / 3.667) * 
+                                (1 - math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1)))) + 
+                                self._res3lom[i] * math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1))))
+
+        self._mmat[i+1] = self._mateq + self._res0lom[i+1] + self._res1lom[i+1] + self._res2lom[i+1] + self._res3lom[i+1]
+            
+        self._force[i] = (self._fco22x * (math.log((self._mmat[i]/self._mateq))/math.log(2)) 
+                            + self._F_Misc[i] + self._F_GHGabate[i])
+
+        self._tbox1eq[i+1] = (self._tbox1eq[i] *
+                                math.exp(self._tstep/self._d1) + self._teq1 *
+                                self._force[i+1] * (1-math.exp(self._tstep/self._d1)))  
+
+        self._tbox2eq[i+1] = (self._tbox2eq[i] *
+                                math.exp(self._tstep/self._d2) + self._teq2 *
+                                self._force[i+1] * (1-math.exp(self._tstep/self._d2)))
+
+        self._tatmeq[i+1] = self._tbox1eq[i+1] + self._tbox2eq[i+1]
+
+        self._cacceq[i] = (self._CCATOT[i] - (self._mateq[i] - self._mateq))
+
+        #Adding in additional code for creating a CSV with the fair model 
+        #Equation values
+
+        if 1==1:
+
+            f = open("./results/parameters.csv" , mode = "w", newline='')
+            writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                
+            header = []
+            header.append("PERIOD")
+            header.append("VARPCC")
+            header.append("RPRECAUT")
+            header.append("RR1")
+            header.append("RR")
+            header.append("L")
+            header.append("GA")
+            header.append("AL")
+            header.append("CPRICEBASE")
+            header.append("PBACKTIME")
+            header.append("GSIG")
+            header.append("SIGMA")
+            writer.writerow(header)
+
+            num_rows = self._num_times + 1
+
+            for i in range(0, num_rows):
+                row = []
+                row.append(i)
+                row.append(self._varpcc[i])
+                row.append(self._rprecaut[i])
+                row.append(self._RR1[i])
+                row.append(self._rr[i])
+                row.append(self._l[i])
+                row.append(self._gA[i])
+                row.append(self._al[i])
+                row.append(self._cpricebase[i])
+                row.append(self._pbacktime[i])
+                row.append(self._gsig[i])
+                row.append(self._sigma[i])
+
+                writer.writerow(row)
+
+                f.close()
+
+        elif 1==2:
+            print("Variance of per capita consumption:", self._varpcc)
+            print("Precationary rate of return:",self._rprecaut)
+            print("STP factor without precationary factor:",self._RR1)
+            print("STP factor with precationary factor:",self._rr)
+            print("Labour:", self._l) # CHECKED OK
+            print("Growth rate of productivity", self._gA) # CHECKED OK
+            print("Productivity", self._al) # CHECKED OK
+            print("Carbon price based case", self._cpricebase) # AGREES WITH NORDHAUS UNTIL 2235 ??
+            print("Backstop price", self._pbacktime) # CHECKED OK
+            print("Change in sigma", self._gsig) # CHECKED OK
+            print("CO2 output ratio:", self._sigma) # CHECKED OK
+            print("Long run savings rate", self._optlrsav) # CHECKED OK
+
+        else:
+            print("SOME CHECKING TO BE DONE")
 
 
-#Create a function to implicitly solve the 
-        
+
+     #Create a function to implicitly solve the 
+            
     #This solves for the irfeqlhs and irfeqrhs equations
     def solve_alpha(self, t):
         # Define the equation for IRFt(t) using the given parameters and functions
@@ -166,58 +270,17 @@ class FAIRParams():
                     (alpha * self._emshare1 * self._tau1 * (1 - np.exp(-100 / (alpha * self._tau1)))) +
                     (alpha * self._emshare2 * self._tau2 * (1 - np.exp(-100 / (alpha * self._tau2)))) +
                     (alpha * self._emshare3 * self._tau3 * (1 - np.exp(-100 / (alpha * self._tau3))))) - \
-                   (self._irf0 + self._irC * self._cacceq(t) + self._irT * self._tatmeq(t))
+                    (self._irf0 + self._irC * self._cacceq(t) + self._irT * self._tatmeq(t))
 
         # Use fsolve to solve for alpha
         alpha_initial_guess = 1.0
         alpha_solution = fsolve(equation, alpha_initial_guess, bounds = (0.1, 100))
         return alpha_solution
 
-
-
     def runModel(self):
-        for i in range(2, self._num_times + 1):
-
-            #Solve for alpha(t) in each time period 
-            self._alpha_t[i+1] = self.solve_alpha(i)
-
-            self._res0lom[i+1] = (self._emshare0 * self._tau0 * self.solve_alpha(i+1) * 
-                                  (self._eco2[i+1] / 3.667) * 
-                                  (1 - math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i+1)))) + 
-                                   self._res0lom[i] * math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i+1))))
-            
-            self._res1lom[i+1] = (self._emshare1 * self._tau1 * self.solve_alpha(i+1) * 
-                                  (self._eco2[i+1] / 3.667) * 
-                                  (1 - math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1)))) + 
-                                   self._res1lom[i] * math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1))))
-            
-            self._res2lom[i+1] = (self._emshare2 * self._tau2 * self.solve_alpha(i+1) * 
-                                  (self._eco2[i+1] / 3.667) * 
-                                  (1 - math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1)))) + 
-                                   self._res2lom[i] * math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1))))
-           
-            self._res3lom[i+1] = (self._emshare3 * self._tau3 * self.solve_alpha(i+1) * 
-                                  (self._eco2[i+1] / 3.667) * 
-                                  (1 - math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1)))) + 
-                                   self._res3lom[i] * math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1))))
-            
-            self._mmat[i+1] = self._mateq + self._res0lom[i+1] + self._res1lom[i+1] + self._res2lom[i+1] + self._res3lom[i+1]
-             
-            self._force[i] = (self._fco22x * (math.log((self._mmat[i]/self._mateq))/math.log(2)) 
-                              + self._F_Misc[i] + self._F_GHGabate[i])
-            
-            self._tbox1eq[i+1] = (self._tbox1eq[i] *
-                                  math.exp(self._tstep/self._d1) + self._teq1 *
-                                  self._force[i+1] * (1-math.exp(self._tstep/self._d1)))  
-            
-            self._tbox2eq[i+1] = (self._tbox2eq[i] *
-                                  math.exp(self._tstep/self._d2) + self._teq2 *
-                                  self._force[i+1] * (1-math.exp(self._tstep/self._d2)))
-            
-            self._tatmeq[i+1] = self._tbox1eq[i+1] + self._tbox2eq[i+1]
-
-            self._cacceq[i] = (self._CCATOT[i] - (self._mateq[i] - self._mateq))
-             
-            pass
+        pass    
 
 print("Success")
+
+
+
