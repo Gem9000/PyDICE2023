@@ -8,7 +8,8 @@ import numpy as np
 import math
 import csv
 
-from scipy.optimize import root_scalar
+#from scipy.optimize import root_scalar
+from scipy.optimize import minimize_scalar
 
 '''
 ** Equals old FAIR with recalibrated parameters for revised F2xco2 and Millar model.
@@ -133,6 +134,7 @@ class FAIRParams():
         self._irfeqlhs = np.zeros(num_times+2)
         self._irfeqrhs = np.zeros(num_times+2)
         self._alpha_t = np.zeros(num_times+2)
+        self._calculated_mmat = np.zeros(num_times+2)
 
         #Filler for the model
         self._F_Misc = np.zeros(num_times+2)
@@ -180,11 +182,11 @@ class FAIRParams():
                                     (1 - math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1)))) + 
                                     self._res3lom[i] * math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1))))
 
-            calculated_mmat = self._mateq + self._res0lom[i+1] + self._res1lom[i+1] + self._res2lom[i+1] + self._res3lom[i+1]
-            if calculated_mmat < 20:
-                self._mmat[i+1] = 20
+            self._calculated_mmat[i+1] = self._mateq + self._res0lom[i+1] + self._res1lom[i+1] + self._res2lom[i+1] + self._res3lom[i+1]
+            if self._calculated_mmat[i+1] < 10:
+                self._mmat[i+1] = 10
             else:
-                self._mmat[i+1] = calculated_mmat
+                self._mmat[i+1] = self._calculated_mmat[i+1]
                 
             self._force[i] = (self._fco22x * ((math.log((self._mmat[i]+1e-9/self._mateq))/math.log(2)) 
                                 + self._F_Misc[i] + self._F_GHGabate[i]))
@@ -210,6 +212,7 @@ class FAIRParams():
             writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 
             header = []
+            header.append("Time Period")
             header.append("Alpha(t)")
             header.append("Reservoir 0")
             header.append("Reservoir 1")
@@ -275,8 +278,8 @@ class FAIRParams():
 
         # Use root_scalar to solve for alpha
         alpha_initial_guess = 1.0
-        alpha_solution = root_scalar(equation, alpha_initial_guess, bracket=(0.1, 100),method= 'brenth')
-        return alpha_solution.root
+        alpha_solution = minimize_scalar(equation, alpha_initial_guess, bounds=(0.1, 100))
+        return alpha_solution.x
 
     def runModel(self):
         pass    
