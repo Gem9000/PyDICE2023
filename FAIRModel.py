@@ -10,6 +10,7 @@ import csv
 
 #from scipy.optimize import root_scalar
 from scipy.optimize import minimize_scalar
+from scipy.optimize import fsolve
 
 '''
 ** Equals old FAIR with recalibrated parameters for revised F2xco2 and Millar model.

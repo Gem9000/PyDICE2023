@@ -8,6 +8,8 @@ import numpy as np
 import math
 import csv
 
+from FAIRModel import FAIRParams
+
 '''
 Adding in new imports for the DICE Model Portion
 '''
@@ -332,6 +334,22 @@ class DiceParams():
 ###########################################################################
 #Variabls and nonnegative variables equations
 ###########################################################################
+        
+        #Make an instance of the class
+        instance = FAIRParams()
+
+
+        FORCING = instance._force              #Radiative forcing equation
+        TATM = instance._tatmeq                #Initial atmospheric temperature change in 2020
+        TBOX1 = instance._tbox1eq              #Temperaute box 1 law of motion
+        TBOX2 = instance._tbox2eq              #Temperaute box 1 law of motion
+        RES0 = instance._res0lom               #Reservoir 0 law of motion
+        RES1 = instance._res1lom               #Reservoir 1 law of motion
+        RES2 = instance._res2lom               #Reservoir 2 law of motion
+        RES3 = instance._res3lom               #Reservoir 3 law of motion
+        MAT = instance._mmat                   #Atmospheric concentration equation
+        CACC = instance._cacceq                #Accumulated carbon in sinks equation
+        
 
         C = np.zeros(num_times+1)              #Consumption (trillions 2019 US dollars per year)
         K = np.zeros(num_times+1)              #Capital stock (trillions 2019 US dollars)
