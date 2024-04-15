@@ -310,7 +310,7 @@ class DiceParams():
 
 
    #    @njit(cache=True, fastmath=True)
-    def simulateDynamics(self, x, sign, outputType, num_times,
+    def simulateDynamics(self, SRF, x, sign, outputType, num_times,
                          tstep, al, ll, sigma, forcoth,
                          cost1, etree,
                          scale1, scale2,
@@ -417,11 +417,12 @@ class DiceParams():
 
 #Fixed initial values(depricated in the 2023 version included for now)
     #ML[1] = ml0
-    #CCATOTEQ[1] = CumEmiss0
+    
     
 
 ###################################Initilizing Equations#################################
         K[1] = k0
+        CCATOTEQ[1] = CumEmiss0
         ##F_GHGabate[1] F_GHGabate2020     #Need to find this value
         
         YGROSS[1] = al[1] * ((L[1]/MILLE)**(1.0-gama)) * K[1]**gama  #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
@@ -449,6 +450,8 @@ class DiceParams():
         CPRICE[1] = pbacktime[1] * (MIUopt[1])**(expcost2-1)
 
         CACC[1] = cca0  # DOES NOT START TILL PERIOD 2
+        t = 1           #Needed to define this just for one of the
+                        #functions that needed it
 
         ########################Economic Initilizations##############
         YNET[1] = YGROSS[1] * (1-DAMFRAC[1])
@@ -457,9 +460,23 @@ class DiceParams():
         CPC[1] = MILLE * C[1]/L[1]
         I[1] = Sopt[1] * Y[1]
 
+        RFACTLONG[1] = 1000000
+        RLONG[1] = (-math.log(RFACTLONG[1]/SRF)/(5*t)) #NEW
+        RSHORT[1] = (-math.log(RFACTLONG[1]/RFACTLONG[0])/(5)) #NEW 
+
         #########################Welfare Functions###################
         PERIODU[1] = ((C[1]*MILLE/L[1])**(1.0-elasmu)-1.0) / (1.0 - elasmu) - 1.0
         TOTPERIODU[1] = PERIODU[1] * L[1] * rr[1]
+
+
+        #Many of the equations in the module have been put into
+        #The separate DFAIR class. The equations that the DFAIR modules rely
+        #On should be calculated and then back checked 
+        for i in range(2, num_times+1):
+
+            #Depends on the t-1 time period
+            CCATOT[i] = CCATOT[i-1] + ECO2[i-1] * (5/3.666)
+
 
 
     def runModel(self):
