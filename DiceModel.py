@@ -124,6 +124,12 @@ class DiceParams():
         #self.lam = self.q
         #self.
 
+
+        ##Legacy constants for the emission parameter. They were't present in 2023
+        ##But were referenced in one of the equations so basing this off 2016 version##
+        self._eland0 = 2.6 # Carbon emissions from land 2015 (GtC02 per year)
+        self._dland = 0.115 # Decline rate of land emissions (per period)
+
         ##Emissions Limits########################
 
         self._miu2 = 0.10 #Second emission limit 
@@ -137,7 +143,7 @@ class DiceParams():
         #Num times should be 81
         #time increment should be 5 years
         self._num_times = num_times
-        self._time_increment = np.arrange(0,self.num_times+1)
+        self._t = np.arange(0,num_times+1)
 
         #Create size arrays so we can index from 1 instead of 0
         self._rartp = np.zeros(num_times+1)
@@ -164,6 +170,8 @@ class DiceParams():
         self._varpcc = np.zeros(num_times+1)
         self._rprecaut = np.zeros(num_times+1)
         self._RR1 = np.zeros(num_times+1)
+        self._etree  = np.zeros(num_times+1)
+
         '''PARAMETERS
         L(t)           Level of population and labor
         aL(t)          Level of total factor productivity
@@ -194,7 +202,6 @@ class DiceParams():
         RR1(t)            STP factor without precautionary factor;
         '''
 
-
         #Set relevant values using the paramteters above
         self._l[1] = self._pop1 #Population 
         self._gA[1] = self._gA1 #Growth rate
@@ -223,6 +230,8 @@ class DiceParams():
             self._pbacktime[i] = self._pback2050 * math.exp(-5*(0.01 if self.t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates the condition found in the 2023 version
             self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
             self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
+
+            self._etree[i] = self._eland0 * (1.0 - self._dland) ** (self._t[i]-1) #Not explicitly defined in the 2023 version, but needs to be included
 
         #Control logic for the emissions control rate
         for i in range(3, self._num_times+1):
@@ -301,7 +310,7 @@ class DiceParams():
 
    #    @njit(cache=True, fastmath=True)
     def simulateDynamics(self, x, sign, outputType, num_times,
-                         tstep, al, ll, sigma, cumetree, forcoth,
+                         tstep, al, ll, sigma, forcoth,
                          cost1, etree,
                          scale1, scale2,
                          ml0, mu0, mat0, cca0,
@@ -372,6 +381,11 @@ class DiceParams():
         RSHORT    = np.zeros(num_times+1)      #Real interest rate with precautionary(per annum year on year)
         RLONG   = np.zeros(num_times+1)        #Real interest rate from year 0 to T
         EIND = np.zeros(num_times+1)           #Industrial Emissions (GtCO2 per year)
+        ECO2 = np.zeros(num_times+1)           
+
+        #Emissions from deforestation
+
+
 
 #Emissions and Damages
         CCATOTEQ = np.zeros(num_times+1)       #Cumulative total carbon emissions
@@ -402,11 +416,13 @@ class DiceParams():
     #CCATOTEQ[1] = CumEmiss0
 
 ###################################Initilizing Equations#################################
+        
+        ECO2[1] = sigma[1] * YGROSS[1] + 
         YGROSS[1] = al[1] * ((L[1]/MILLE)**(1.0-gama)) * K[1]**gama  #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
         EIND[1] = sigma[1] * YGROSS[1] * (1.0 - MIUopt[1])
         CCATOT[1] = CCATOT[1] 
-        CCA[1] = cca0  # DOES NOT START TILL PERIOD 2
-        CCATOT[1] = CCA[1] + cumetree[1]
+        CACC[1] = cca0  # DOES NOT START TILL PERIOD 2
+        #CCATOT[1] = CACC[1] + cumetree[1]
 
         #FORC[1] = fco22x * np.log(MAT[1]/588.000)/LOG2 + forcoth[1]
         DAMFRAC[1] = a1*TATM[1] + a2*TATM[1]**a3
