@@ -210,6 +210,7 @@ class DiceParams():
         self._rr[1] = 1.0
         self._miuup[1] = self._miu1
         self._miuup[2] = self._miu2
+        self._etree[1] = self._eland0
         #varpcc(t)       =  min(Siggc1**2*5*(t.val-1),Siggc1**2*5*47);
 
         self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference 
@@ -381,8 +382,12 @@ class DiceParams():
         RSHORT    = np.zeros(num_times+1)      #Real interest rate with precautionary(per annum year on year)
         RLONG   = np.zeros(num_times+1)        #Real interest rate from year 0 to T
         EIND = np.zeros(num_times+1)           #Industrial Emissions (GtCO2 per year)
+        
+        #New
         ECO2 = np.zeros(num_times+1)           
-
+        ECO2E = np.zeros(num_times+1)
+        CO2E_GHGabateB = np.zeros(num_times+1)
+        F_GHGabate = np.zeros(num_times+1)
         #Emissions from deforestation
 
 
@@ -411,18 +416,30 @@ class DiceParams():
         #UTILEQ =  np.zeros(num_times+1)        #Objective function
 
 #Fixed initial values(depricated in the 2023 version included for now)
-    #ML[1] = ml0d
-    #K[1] = k0
+    #ML[1] = ml0
     #CCATOTEQ[1] = CumEmiss0
+    
 
 ###################################Initilizing Equations#################################
+        K[1] = k0
+        ##F_GHGabate[1] F_GHGabate2020     #Need to find this value
         
-        ECO2[1] = sigma[1] * YGROSS[1] + 
         YGROSS[1] = al[1] * ((L[1]/MILLE)**(1.0-gama)) * K[1]**gama  #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
+
+        ECO2[1] = (sigma[1] * YGROSS[1] + etree[1]) * (1-MIUopt) #New
         EIND[1] = sigma[1] * YGROSS[1] * (1.0 - MIUopt[1])
-        CCATOT[1] = CCATOT[1] 
-        CACC[1] = cca0  # DOES NOT START TILL PERIOD 2
-        #CCATOT[1] = CACC[1] + cumetree[1]
+        
+        ECO2E[1] = (sigma[1] * YGROSS[1] + etree[1] + CO2E_GHGabateB[1]) * (1-MIUopt) #New
+        
+        CCATOT[1] = CCATOT[1] + ECO2[1]*(5/3.666)
+        DAMFRAC = (a1 * TATM[1] + a2 * TATM[1] ** a3)  
+        DAMAGES = YGROSS[1] * DAMFRAC[1]
+        
+        ABATECOST = YGROSS[1] * cost1[1] * (MIUopt[1] ** expcost2) #NEEDS TO BE CHECKED
+        MCABATE = pbacktime[1] * MIUopt[1] ** (expcost2-1)
+        CPRICE = pbacktime[1] * (MIUopt[1]) **(expcost2-1)
+
+        #CCATOT[1] = CACC[1] + cumetree[1] #Potentially depricated but need to look into this more
 
         #FORC[1] = fco22x * np.log(MAT[1]/588.000)/LOG2 + forcoth[1]
         DAMFRAC[1] = a1*TATM[1] + a2*TATM[1]**a3
@@ -431,19 +448,18 @@ class DiceParams():
         MCABATE[1] = pbacktime[1] * MIUopt[1]**(expcost2-1)
         CPRICE[1] = pbacktime[1] * (MIUopt[1])**(expcost2-1)
 
+        CACC[1] = cca0  # DOES NOT START TILL PERIOD 2
 
+        ########################Economic Initilizations##############
+        YNET[1] = YGROSS[1] * (1-DAMFRAC[1])
+        Y[1] = YNET[1] - ABATECOST[1]
+        C[1] = Y[1] - I[1]
+        CPC[1] = MILLE * C[1]/L[1]
+        I[1] = Sopt[1] * Y[1]
 
-
-
-
-
-
-
-
-
-
-
-
+        #########################Welfare Functions###################
+        PERIODU[1] = ((C[1]*MILLE/L[1])**(1.0-elasmu)-1.0) / (1.0 - elasmu) - 1.0
+        TOTPERIODU[1] = PERIODU[1] * L[1] * rr[1]
 
 
     def runModel(self):
