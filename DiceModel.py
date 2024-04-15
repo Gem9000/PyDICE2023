@@ -1,12 +1,35 @@
 '''
 Created 02/23/2024 
 Author: George Moraites
-Adapted From: domokane dice_params.py
+Adapted From: domokane DICEModel.py
 '''
 
 import numpy as np
 import math
 import csv
+
+from FAIRModel import FAIRParams
+
+'''
+Adding in new imports for the DICE Model Portion
+'''
+from numba import njit
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import seaborn
+seaborn.set_theme(style='ticks')
+
+###############################################################################
+
+@njit(cache=True, fastmath=True)
+def objFn(x, *args):
+    """ This is the pass-through function that returns a single float value of
+    the objective function for the benefit of the optimisation algorithm. """
+
+    #out = simulateDynamics(x, *args)
+    return out[0, 0]
+
+###############################################################################
 
 class DiceParams():
 
@@ -101,6 +124,12 @@ class DiceParams():
         #self.lam = self.q
         #self.
 
+
+        ##Legacy constants for the emission parameter. They were't present in 2023
+        ##But were referenced in one of the equations so basing this off 2016 version##
+        self._eland0 = 2.6 # Carbon emissions from land 2015 (GtC02 per year)
+        self._dland = 0.115 # Decline rate of land emissions (per period)
+
         ##Emissions Limits########################
 
         self._miu2 = 0.10 #Second emission limit 
@@ -114,7 +143,7 @@ class DiceParams():
         #Num times should be 81
         #time increment should be 5 years
         self._num_times = num_times
-        self._time_increment = np.arrange(0,self.num_times+1)
+        self._t = np.arange(0,num_times+1)
 
         #Create size arrays so we can index from 1 instead of 0
         self._rartp = np.zeros(num_times+1)
@@ -141,6 +170,8 @@ class DiceParams():
         self._varpcc = np.zeros(num_times+1)
         self._rprecaut = np.zeros(num_times+1)
         self._RR1 = np.zeros(num_times+1)
+        self._etree  = np.zeros(num_times+1)
+
         '''PARAMETERS
         L(t)           Level of population and labor
         aL(t)          Level of total factor productivity
@@ -171,7 +202,6 @@ class DiceParams():
         RR1(t)            STP factor without precautionary factor;
         '''
 
-
         #Set relevant values using the paramteters above
         self._l[1] = self._pop1 #Population 
         self._gA[1] = self._gA1 #Growth rate
@@ -180,6 +210,7 @@ class DiceParams():
         self._rr[1] = 1.0
         self._miuup[1] = self._miu1
         self._miuup[2] = self._miu2
+        self._etree[1] = self._eland0
         #varpcc(t)       =  min(Siggc1**2*5*(t.val-1),Siggc1**2*5*47);
 
         self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference 
@@ -201,6 +232,8 @@ class DiceParams():
             self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
             self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
 
+            self._etree[i] = self._eland0 * (1.0 - self._dland) ** (self._t[i]-1) #Not explicitly defined in the 2023 version, but needs to be included
+
         #Control logic for the emissions control rate
         for i in range(3, self._num_times+1):
             if self._t[i]> 2:
@@ -216,10 +249,6 @@ class DiceParams():
             if self._t[i] > 57:
                 self._miuup[t] = self._limmiu2300
              
-        
-        #Optimal long-run savings rate used for transversality (Question)
-        self._optlrsav =(self._dk + 0.004)/(self._dk + 0.004*self._elasmu+ self._rartp)*self._gama
-
         if 1==1:
 
             f = open("./results/parameters.csv" , mode = "w", newline='')
@@ -227,17 +256,17 @@ class DiceParams():
         
             header = []
             header.append("PERIOD")
+            header.append("VARPCC")
+            header.append("RPRECAUT")
+            header.append("RR1")
+            header.append("RR")
             header.append("L")
             header.append("GA")
             header.append("AL")
+            header.append("CPRICEBASE")
+            header.append("PBACKTIME")
             header.append("GSIG")
             header.append("SIGMA")
-            header.append("PBACKTIME")
-            header.append("COST1")
-            header.append("ETREE")
-            header.append("CUMETREE")
-            header.append("RR")
-            header.append("CPRICEBASE")
             writer.writerow(header)
             
             num_rows = self._num_times + 1
@@ -245,42 +274,210 @@ class DiceParams():
             for i in range(0, num_rows):
                 row = []
                 row.append(i)
+                row.append(self._varpcc[i])
+                row.append(self._rprecaut[i])
+                row.append(self._RR1[i])
+                row.append(self._rr[i])
                 row.append(self._l[i])
-                row.append(self._ga[i])
+                row.append(self._gA[i])
                 row.append(self._al[i])
+                row.append(self._cpricebase[i])
+                row.append(self._pbacktime[i])
                 row.append(self._gsig[i])
                 row.append(self._sigma[i])
-                row.append(self._pbacktime[i])
-                row.append(self._cost1[i])
-                row.append(self._etree[i])
-                row.append(self._cumetree[i])
-                row.append(self._rr[i])
-                row.append(self._cpricebase[i])
 
                 writer.writerow(row)
 
             f.close()
 
         elif 1==2:
-
+            print("Variance of per capita consumption:", self._varpcc)
+            print("Precationary rate of return:",self._rprecaut)
+            print("STP factor without precationary factor:",self._RR1)
+            print("STP factor with precationary factor:",self._rr)
             print("Labour:", self._l) # CHECKED OK
-            print("Growth rate of productivity", self._ga) # CHECKED OK
+            print("Growth rate of productivity", self._gA) # CHECKED OK
             print("Productivity", self._al) # CHECKED OK
-            print("CO2 output ratio:", self._sigma) # CHECKED OK
-            print("Change in sigma", self._gsig) # CHECKED OK
-            print("Cumulative from land", self._cumetree) # CHECKED BUT UNSURE ABOUT INITIAL PRICE SOURCE OF 100
-            print("Adjusted cost backstop", self._cost1) # CHECKED OK
-            print("Backstop price", self._pbacktime) # CHECKED OK
-            print("Emissions deforestation", self._etree) # CHECKED OK
-            print("Utility social rate discount factor", self._rr) # CANNOT SEE ON NORDHAUS ??
             print("Carbon price based case", self._cpricebase) # AGREES WITH NORDHAUS UNTIL 2235 ??
-            print("Exogenous forcing others", self._forcoth) # CHECKED OK
+            print("Backstop price", self._pbacktime) # CHECKED OK
+            print("Change in sigma", self._gsig) # CHECKED OK
+            print("CO2 output ratio:", self._sigma) # CHECKED OK
             print("Long run savings rate", self._optlrsav) # CHECKED OK
 
         else:
             print("SOME CHECKING TO BE DONE")
- 
+
+
+
+   #    @njit(cache=True, fastmath=True)
+    def simulateDynamics(self, SRF, x, sign, outputType, num_times,
+                         tstep, al, ll, sigma, forcoth,
+                         cost1, etree,
+                         scale1, scale2,
+                         ml0, mu0, mat0, cca0,
+                         a1, a2, a3,
+                         c1, c3, c4,
+                         b11, b12, b21, b22, b32, b23, b33,
+                         fco22x, t2xco2, rr, gama,
+                         tocean0, tatm0, elasmu, prstp, expcost2,
+                         k0, dk, pbacktime, CumEmiss0):
+        """ This is the simulation of the DICE 2016 model dynamics. It is optimised
+        for speed. For this reason I have avoided the use of classes. """
+    
+        LOG2 = np.log(2)
+        L = ll  # NORDHAUS RENAMES IT TO UPPER CASE IN EQUATIONS
+        MILLE = 1000.0  ######NEED TO LOOK AT THIS##############
+    
+        # We take care to ensure that the indexing starts at 1 to allow comparison
+        # with matlab
+        MIUopt = np.zeros(num_times+1)
+        Sopt = np.zeros(num_times+1)
+    
 ###############################################################################
+# Set the optimisation variables
+###############################################################################
+
+        for i in range(1, num_times+1):
+            MIUopt[i] = x[i-1]          #Optimal emissions control rate GHGS
+            Sopt[i] = x[num_times + i-1]   #Gross savings rate as fraction of gross world product
+    
+###########################################################################
+#Variabls and nonnegative variables equations
+###########################################################################
+        
+        #Make an instance of the FAIR PARAMETERS class
+        instance = FAIRParams()
+
+        #These are already initilized to zero in the FAIR class 
+
+        FORCING = instance._force              #Radiative forcing equation
+        TATM = instance._tatmeq                #Initial atmospheric temperature change in 2020
+        TBOX1 = instance._tbox1eq              #Temperaute box 1 law of motion
+        TBOX2 = instance._tbox2eq              #Temperaute box 1 law of motion
+        RES0 = instance._res0lom               #Reservoir 0 law of motion
+        RES1 = instance._res1lom               #Reservoir 1 law of motion
+        RES2 = instance._res2lom               #Reservoir 2 law of motion
+        RES3 = instance._res3lom               #Reservoir 3 law of motion
+        MAT = instance._mmat                   #Atmospheric concentration equation
+        CACC = instance._cacceq                #Accumulated carbon in sinks equation
+        
+
+        C = np.zeros(num_times+1)              #Consumption (trillions 2019 US dollars per year)
+        K = np.zeros(num_times+1)              #Capital stock (trillions 2019 US dollars)
+        CPC = np.zeros(num_times+1)            #Per capita consumption (thousands 2019 USD per year)
+        I =  np.zeros(num_times+1)             #Investment (trillions 2019 USD per year)
+        Y  = np.zeros(num_times+1)             #Gross world product net of abatement and damages (trillions 2019 USD per year)
+        YGROSS = np.zeros(num_times+1)         #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
+        YNET  = np.zeros(num_times+1)          #Output net of damages equation (trillions 2019 USD per year)
+        DAMAGES = np.zeros(num_times+1)        #Damages (trillions 2019 USD per year)
+        DAMFRAC = np.zeros(num_times+1)        #Damages as fraction of gross output
+        ABATECOST = np.zeros(num_times+1)      #Cost of emissions reductions  (trillions 2019 USD per year)
+        MCABATE  = np.zeros(num_times+1)       #Marginal cost of abatement (2019$ per ton CO2)
+        CCATOT  = np.zeros(num_times+1)        #Total carbon emissions (GtC)
+        PERIODU  = np.zeros(num_times+1)       #One period utility function
+        CPRICE   =  np.zeros(num_times+1)      #Carbon price (2019$ per ton of CO2)
+        TOTPERIODU = np.zeros(num_times+1)     #Period utility
+        UTILITY    = np.zeros(num_times+1)     #Welfare function
+        RFACTLONG = np.zeros(num_times+1)
+        RSHORT    = np.zeros(num_times+1)      #Real interest rate with precautionary(per annum year on year)
+        RLONG   = np.zeros(num_times+1)        #Real interest rate from year 0 to T
+        EIND = np.zeros(num_times+1)           #Industrial Emissions (GtCO2 per year)
+        
+        #New
+        ECO2 = np.zeros(num_times+1)           
+        ECO2E = np.zeros(num_times+1)
+        CO2E_GHGabateB = np.zeros(num_times+1)
+        F_GHGabate = np.zeros(num_times+1)
+        #Emissions from deforestation
+
+
+
+#Emissions and Damages
+        CCATOTEQ = np.zeros(num_times+1)       #Cumulative total carbon emissions
+        DAMFRACEQ = np.zeros(num_times+1)      #Equation for damage fraction
+        DAMEQ = np.zeros(num_times+1)          #Damage equation
+        ABATEEQ = np.zeros(num_times+1)        #Cost of emissions reductions equation
+        MCABATEEQ = np.zeros(num_times+1)      #Equation for MC abatement
+        CARBPRICEEQ = np.zeros(num_times+1)    #Carbon price equation from abatement
+#Economic variables
+        YGROSSEQ = np.zeros(num_times+1)       #Output gross equation
+        YNETEQ = np.zeros(num_times+1)         #Output net of damages equation
+        YY = np.zeros(num_times+1)             #Output net equation
+        CC = np.zeros(num_times+1)             #Consumption equation
+        CPCE = np.zeros(num_times+1)           #Per capita consumption definition
+        SEQ = np.zeros(num_times+1)            #Savings rate equation
+        KK =  np.zeros(num_times+1)            #Capital balance equation
+        RSHORTEQ = np.zeros(num_times+1)       #Short-run interest rate equation
+        RLONGEQ = np.zeros(num_times+1)        #Long-run interest rate equation
+        RFACTLONGEQ = np.zeros(num_times+1)    #Long interest factor
+#Utility
+        TOTPERIODUEQ = np.zeros(num_times+1)   #Period utility
+        PERIODUEQ = np.zeros(num_times+1)      #Instantaneous utility function equation
+        #UTILEQ =  np.zeros(num_times+1)        #Objective function
+
+#Fixed initial values(depricated in the 2023 version included for now)
+    #ML[1] = ml0
+    
+    
+
+###################################Initilizing Equations#################################
+        K[1] = k0
+        CCATOTEQ[1] = CumEmiss0
+        ##F_GHGabate[1] F_GHGabate2020     #Need to find this value
+        
+        YGROSS[1] = al[1] * ((L[1]/MILLE)**(1.0-gama)) * K[1]**gama  #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
+
+        ECO2[1] = (sigma[1] * YGROSS[1] + etree[1]) * (1-MIUopt) #New
+        EIND[1] = sigma[1] * YGROSS[1] * (1.0 - MIUopt[1])
+        
+        ECO2E[1] = (sigma[1] * YGROSS[1] + etree[1] + CO2E_GHGabateB[1]) * (1-MIUopt) #New
+        
+        CCATOT[1] = CCATOT[1] + ECO2[1]*(5/3.666)
+        DAMFRAC = (a1 * TATM[1] + a2 * TATM[1] ** a3)  
+        DAMAGES = YGROSS[1] * DAMFRAC[1]
+        
+        ABATECOST = YGROSS[1] * cost1[1] * (MIUopt[1] ** expcost2) #NEEDS TO BE CHECKED
+        MCABATE = pbacktime[1] * MIUopt[1] ** (expcost2-1)
+        CPRICE = pbacktime[1] * (MIUopt[1]) **(expcost2-1)
+
+        #CCATOT[1] = CACC[1] + cumetree[1] #Potentially depricated but need to look into this more
+
+        #FORC[1] = fco22x * np.log(MAT[1]/588.000)/LOG2 + forcoth[1]
+        DAMFRAC[1] = a1*TATM[1] + a2*TATM[1]**a3
+        DAMAGES[1] = YGROSS[1] * DAMFRAC[1]
+        ABATECOST[1] = YGROSS[1] * cost1[1] * MIUopt[1]**expcost2
+        MCABATE[1] = pbacktime[1] * MIUopt[1]**(expcost2-1)
+        CPRICE[1] = pbacktime[1] * (MIUopt[1])**(expcost2-1)
+
+        CACC[1] = cca0  # DOES NOT START TILL PERIOD 2
+        t = 1           #Needed to define this just for one of the
+                        #functions that needed it
+
+        ########################Economic Initilizations##############
+        YNET[1] = YGROSS[1] * (1-DAMFRAC[1])
+        Y[1] = YNET[1] - ABATECOST[1]
+        C[1] = Y[1] - I[1]
+        CPC[1] = MILLE * C[1]/L[1]
+        I[1] = Sopt[1] * Y[1]
+
+        RFACTLONG[1] = 1000000
+        RLONG[1] = (-math.log(RFACTLONG[1]/SRF)/(5*t)) #NEW
+        RSHORT[1] = (-math.log(RFACTLONG[1]/RFACTLONG[0])/(5)) #NEW 
+
+        #########################Welfare Functions###################
+        PERIODU[1] = ((C[1]*MILLE/L[1])**(1.0-elasmu)-1.0) / (1.0 - elasmu) - 1.0
+        TOTPERIODU[1] = PERIODU[1] * L[1] * rr[1]
+
+
+        #Many of the equations in the module have been put into
+        #The separate DFAIR class. The equations that the DFAIR modules rely
+        #On should be calculated and then back checked 
+        for i in range(2, num_times+1):
+
+            #Depends on the t-1 time period
+            CCATOT[i] = CCATOT[i-1] + ECO2[i-1] * (5/3.666)
+
+
 
     def runModel(self):
         pass
