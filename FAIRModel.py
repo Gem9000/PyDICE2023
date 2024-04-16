@@ -158,51 +158,57 @@ class FAIRParams():
         self._tbox1eq[1] = self._tbox10
         self._tbox2eq[1] = self._tbox20
     
-        for i in range(1, self._num_times + 1):
+
+        #Changing this to match the format of the DICE Model 
+        #If i+1 should be i
+        #If i should be i-1
+
+        for i in range(2, self._num_times + 1):
 
             #Solve for alpha(t) in each time period 
-            self._alpha_t[i+1] = self.solve_alpha(i)
+            self._alpha_t[i] = self.solve_alpha(i-1)
 
-            self._res0lom[i+1] = (self._emshare0 * self._tau0 * self.solve_alpha(i+1) * 
-                                    (self._eco2[i+1] / 3.667) * 
-                                    (1 - math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i+1)))) + 
-                                    self._res0lom[i] * math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i+1))))
+            self._res0lom[i] = (self._emshare0 * self._tau0 * self.solve_alpha(i-1) * 
+                                    (self._eco2[i] / 3.667) * 
+                                    (1 - math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i-1)))) + 
+                                    self._res0lom[i-1] * math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i-1))))
 
-            self._res1lom[i+1] = (self._emshare1 * self._tau1 * self.solve_alpha(i+1) * 
-                                    (self._eco2[i+1] / 3.667) * 
+            self._res1lom[i] = (self._emshare1 * self._tau1 * self.solve_alpha(i+1) * 
+                                    (self._eco2[i] / 3.667) * 
                                     (1 - math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1)))) + 
-                                    self._res1lom[i] * math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1))))
+                                    self._res1lom[i-1] * math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1))))
 
-            self._res2lom[i+1] = (self._emshare2 * self._tau2 * self.solve_alpha(i+1) * 
-                                    (self._eco2[i+1] / 3.667) * 
+            self._res2lom[i] = (self._emshare2 * self._tau2 * self.solve_alpha(i+1) * 
+                                    (self._eco2[i] / 3.667) * 
                                     (1 - math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1)))) + 
-                                    self._res2lom[i] * math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1))))
+                                    self._res2lom[i-1] * math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1))))
 
-            self._res3lom[i+1] = (self._emshare3 * self._tau3 * self.solve_alpha(i+1) * 
-                                    (self._eco2[i+1] / 3.667) * 
+            self._res3lom[i] = (self._emshare3 * self._tau3 * self.solve_alpha(i+1) * 
+                                    (self._eco2[i] / 3.667) * 
                                     (1 - math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1)))) + 
-                                    self._res3lom[i] * math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1))))
+                                    self._res3lom[i-1] * math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1))))
 
-            self._calculated_mmat[i+1] = self._mateq + self._res0lom[i+1] + self._res1lom[i+1] + self._res2lom[i+1] + self._res3lom[i+1]
-            if self._calculated_mmat[i+1] < 10:
-                self._mmat[i+1] = 10
+            self._calculated_mmat[i] = self._mateq + self._res0lom[i] + self._res1lom[i] + self._res2lom[i] + self._res3lom[i]
+            if self._calculated_mmat[i] < 10:
+                self._mmat[i] = 10
             else:
-                self._mmat[i+1] = self._calculated_mmat[i+1]
+                self._mmat[i] = self._calculated_mmat[i+1]
                 
-            self._force[i] = (self._fco22x * ((math.log((self._mmat[i]+1e-9/self._mateq))/math.log(2)) 
-                                + self._F_Misc[i] + self._F_GHGabate[i]))
+            self._force[i] = (self._fco22x * ((math.log((self._mmat[i-1]+1e-9/self._mateq))/math.log(2)) 
+                                + self._F_Misc[i-1] + self._F_GHGabate[i-1])) #Good need to find definition of F_Misc
+                                                                                #Also need to find better definition of F_GHGabate
 
-            self._tbox1eq[i+1] = (self._tbox1eq[i] *
+            self._tbox1eq[i] = (self._tbox1eq[i-1] *
                                     math.exp(self._tstep/self._d1) + self._teq1 *
-                                    self._force[i+1] * (1-math.exp(self._tstep/self._d1)))  
+                                    self._force[i] * (1-math.exp(self._tstep/self._d1))) #Good
 
-            self._tbox2eq[i+1] = (self._tbox2eq[i] *
+            self._tbox2eq[i] = (self._tbox2eq[i-1] *
                                     math.exp(self._tstep/self._d2) + self._teq2 *
-                                    self._force[i+1] * (1-math.exp(self._tstep/self._d2)))
+                                    self._force[i] * (1-math.exp(self._tstep/self._d2))) #Good
 
-            self._tatmeq[i+1] = np.clip(self._tbox1eq[i+1] + self._tbox2eq[i+1], 0.5, 20)
+            self._tatmeq[i] = np.clip(self._tbox1eq[i-1] + self._tbox2eq[i-1], 0.5, 20) #Good
 
-            self._cacceq[i] = (self._CCATOT[i] - (self._mmat[i] - self._mateq))
+            self._cacceq[i] = (self._CCATOT[i-1] - (self._mmat[i-1] - self._mateq)) #Good
 
         #Adding in additional code for creating a CSV with the fair model 
         #Equation values

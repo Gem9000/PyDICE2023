@@ -421,7 +421,6 @@ class DiceParams():
     
 
 ###################################Initilizing Equations#################################
-        K[1] = k0
         CCATOTEQ[1] = CumEmiss0
         ##F_GHGabate[1] F_GHGabate2020     #Need to find this value
         
@@ -440,8 +439,6 @@ class DiceParams():
         MCABATE = pbacktime[1] * MIUopt[1] ** (expcost2-1)
         CPRICE = pbacktime[1] * (MIUopt[1]) **(expcost2-1)
 
-        #CCATOT[1] = CACC[1] + cumetree[1] #Potentially depricated but need to look into this more
-
         #FORC[1] = fco22x * np.log(MAT[1]/588.000)/LOG2 + forcoth[1]
         DAMFRAC[1] = a1*TATM[1] + a2*TATM[1]**a3
         DAMAGES[1] = YGROSS[1] * DAMFRAC[1]
@@ -459,6 +456,7 @@ class DiceParams():
         C[1] = Y[1] - I[1]
         CPC[1] = MILLE * C[1]/L[1]
         I[1] = Sopt[1] * Y[1]
+        K[1] = k0
 
         RFACTLONG[1] = 1000000
         RLONG[1] = (-math.log(RFACTLONG[1]/SRF)/(5*t)) #NEW
@@ -476,8 +474,42 @@ class DiceParams():
 
             #Depends on the t-1 time period
             CCATOT[i] = CCATOT[i-1] + ECO2[i-1] * (5/3.666)
+            YGROSS[i] = al[i] * ((L[i]/MILLE)**(1.0-gama)) * K[i]**gama  #Gross world product GROSS of abatement and damages (trillions 20i9 USD per year)
 
+            ECO2[i] = (sigma[i] * YGROSS[i] + etree[i]) * (1-MIUopt) #New
+            EIND[i] = sigma[i] * YGROSS[i] * (1.0 - MIUopt[i])
+            
+            ECO2E[i] = (sigma[i] * YGROSS[i] + etree[i] + CO2E_GHGabateB[i]) * (1-MIUopt) #New
+            
+            CCATOT[i] = CCATOT[i] + ECO2[i]*(5/3.666)
+            DAMFRAC = (a1 * TATM[i] + a2 * TATM[i] ** a3)  
+            DAMAGES = YGROSS[i] * DAMFRAC[i]
+            
+            ABATECOST = YGROSS[i] * cost1[i] * (MIUopt[i] ** expcost2) #NEEDS TO BE CHECKED
+            MCABATE = pbacktime[i] * MIUopt[i] ** (expcost2-1)
+            CPRICE = pbacktime[i] * (MIUopt[i]) **(expcost2-1)
 
+            DAMFRAC[i] = a1*TATM[i] + a2*TATM[i]**a3
+            DAMAGES[i] = YGROSS[i] * DAMFRAC[i]
+            ABATECOST[i] = YGROSS[i] * cost1[i] * MIUopt[i]**expcost2
+            MCABATE[i] = pbacktime[i] * MIUopt[i]**(expcost2-i)
+            CPRICE[i] = pbacktime[i] * (MIUopt[i])**(expcost2-i)
+
+            ########################Economic##############################
+            YNET[i] = YGROSS[i] * (i-DAMFRAC[i])
+            Y[i] = YNET[i] - ABATECOST[i]
+            C[i] = Y[i] - I[i]
+            CPC[i] = MILLE * C[i]/L[i]
+            I[i] = Sopt[i] * Y[i]
+            K[i] = (1.0 -dk)**tstep * K[i-1] + tstep * I[i]
+
+            RFACTLONG[i] = (SRF * (CPC[i-1]/CPC[i])**(-elasmu)*rr[i-1])
+            RLONG[i] = (-math.log(RFACTLONG[i-1]/SRF)/(5*t)) #NEW
+            RSHORT[i] = (-math.log(RFACTLONG[i-1]/RFACTLONG[i])/(5)) #NEW 
+
+            #########################Welfare Functions###################
+            PERIODU[i] = ((C[i]*MILLE/L[i])**(1.0-elasmu)-1.0) / (1.0 - elasmu) - 1.0
+            TOTPERIODU[i] = PERIODU[i] * L[i] * rr[i]
 
     def runModel(self):
         pass
