@@ -542,9 +542,9 @@ class DiceParams():
                 jTime = iTime - 1
                 output[jTime, col] = EIND[iTime]
                 col += 1  # 0
-                output[jTime, col] = E[iTime]
+                output[jTime, col] = ECO2[iTime]
                 col += 1  # 1
-                output[jTime, col] = CO2PPM[iTime]
+                output[jTime, col] = ECO2E[iTime]
                 col += 1  # 2
                 output[jTime, col] = TATM[iTime]
                 col += 1  # 3
@@ -558,53 +558,48 @@ class DiceParams():
                 col += 1  # 7
                 output[jTime, col] = MIUopt[iTime]
                 col += 1  # 8
-                output[jTime, col] = RI[iTime]
+                output[jTime, col] = rr[iTime]
                 col += 1  # 9
-                output[jTime, col] = SOCCC[iTime]
-                col += 1  # 10
 
                 output[jTime, col] = ll[iTime]
-                col += 1  # 11
+                col += 1  # 10
                 output[jTime, col] = al[iTime]
-                col += 1  # 12
+                col += 1  # 11
                 output[jTime, col] = YGROSS[iTime]
-                col += 1  # 13
+                col += 1  # 12
 
                 output[jTime, col] = K[iTime]
-                col += 1  # 14
+                col += 1  # 13
                 output[jTime, col] = Sopt[iTime]
+                col += 1  # 14
+                output[jTime, col] = I[iTime]
                 col += 1  # 15
-                output[jTime, col] = II[iTime]
-                col += 1  # 16
                 output[jTime, col] = YNET[iTime]
-                col += 1  # 17
+                col += 1  # 16
 
-                output[jTime, col] = CCA[iTime]
-                col += 1  # 18
                 output[jTime, col] = CCATOT[iTime]
-                col += 1  # 19
-                output[jTime, col] = ML[iTime]
-                col += 1  # 20
-                output[jTime, col] = MU[iTime]
-                col += 1  # 21
-                output[jTime, col] = FORC[iTime]
-                col += 1  # 22
-                output[jTime, col] = TOCEAN[iTime]
-                col += 1  # 23
+                col += 1  # 17
                 output[jTime, col] = DAMAGES[iTime]
-                col += 1  # 24
+                col += 1  # 18
                 output[jTime, col] = ABATECOST[iTime]
-                col += 1  # 25
+                col += 1  # 19
                 output[jTime, col] = MCABATE[iTime]
-                col += 1  # 26
+                col += 1  # 20
                 output[jTime, col] = C[iTime]
-                col += 1  # 27
+                col += 1  # 21
                 output[jTime, col] = PERIODU[iTime]
-                col += 1  # 28
-                output[jTime, col] = CEMUTOTPER[iTime]
-                col += 1  # 29
-                output[jTime, col] = MAT[iTime]
-                col += 1  # 30
+                col += 1  # 22
+                output[jTime, col] = TOTPERIODU[iTime]
+                col += 1  # 23
+                output[jTime, col] = RFACTLONG[iTime]
+                col += 1  # 24
+                output[jTime, col] = RLONG[iTime]
+                col += 1  # 25
+                output[jTime, col] = RSHORT[iTime]
+                col += 1  # 26
+                output[jTime,col] = etree[iTime]
+                col += 1 # 27
+
 
             return output
 
@@ -623,16 +618,16 @@ def dumpState(years, output, filename):
 
     header = []
     header.append("EIND")
-    header.append("E")
-    header.append("CO2PPM")
+    header.append("ECO2")
+    header.append("ECO2E")
     header.append("TATM")
     header.append("Y")
     header.append("DAMFRAC")
     header.append("CPC")
     header.append("CPRICE")
     header.append("MIUopt")
-    header.append("RI")
-    header.append("SOCCC")
+    header.append("rr")
+    
 
     header.append("L")
     header.append("AL")
@@ -643,19 +638,17 @@ def dumpState(years, output, filename):
     header.append("I")
     header.append("YNET")
 
-    header.append("CCA")
     header.append("CCATOT")
-    header.append("ML")
-    header.append("MU")
-    header.append("FORC")
-    header.append("TOCEAN")
     header.append("DAMAGES")
     header.append("ABATECOST")
     header.append("MCABATE")
     header.append("C")
     header.append("PERIODU")
-    header.append("CEMUTOTPER")
-    header.append("MAT")
+    header.append("TOTPERIODU")
+    header.append("RFACTLONG")
+    header.append("RLONG")
+    header.append("RSHORT")
+    header.append("ETREE")
 
     if 1 == 0:
         num_cols = output.shape[0]
@@ -690,8 +683,7 @@ def dumpState(years, output, filename):
 
 ###############################################################################    
 
-
-    def runModel(self):
+def runModel(self):
         pass
 
 
