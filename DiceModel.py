@@ -613,6 +613,82 @@ class DiceParams():
 
     
         return output
+    
+
+def dumpState(years, output, filename):
+
+    f = open(filename, mode="w", newline='')
+    writer = csv.writer(f, delimiter=',', quotechar='"',
+                        quoting=csv.QUOTE_MINIMAL)
+
+    header = []
+    header.append("EIND")
+    header.append("E")
+    header.append("CO2PPM")
+    header.append("TATM")
+    header.append("Y")
+    header.append("DAMFRAC")
+    header.append("CPC")
+    header.append("CPRICE")
+    header.append("MIUopt")
+    header.append("RI")
+    header.append("SOCCC")
+
+    header.append("L")
+    header.append("AL")
+    header.append("YGROSS")
+
+    header.append("K")
+    header.append("Sopt")
+    header.append("I")
+    header.append("YNET")
+
+    header.append("CCA")
+    header.append("CCATOT")
+    header.append("ML")
+    header.append("MU")
+    header.append("FORC")
+    header.append("TOCEAN")
+    header.append("DAMAGES")
+    header.append("ABATECOST")
+    header.append("MCABATE")
+    header.append("C")
+    header.append("PERIODU")
+    header.append("CEMUTOTPER")
+    header.append("MAT")
+
+    if 1 == 0:
+        num_cols = output.shape[0]
+        num_rows = len(header)
+
+        row = ["INDEX"]
+        for iCol in range(0, num_cols):
+            row.append(iCol+1)
+        writer.writerow(row)
+
+        for iRow in range(1, num_rows):
+            row = [header[iRow-1]]
+            for iCol in range(0, num_cols):
+                row.append(output[iCol, iRow-1])
+            writer.writerow(row)
+    else:
+        num_rows = output.shape[0]
+        num_cols = len(header)
+
+        row = ['IPERIOD']
+        for iCol in range(0, num_cols):
+            row.append(header[iCol])
+        writer.writerow(row)
+
+        for iRow in range(1, num_rows):
+            row = [iRow]
+            for iCol in range(1, num_cols):
+                row.append(output[iRow, iCol-1])
+            writer.writerow(row)
+
+    f.close()
+
+###############################################################################    
 
 
     def runModel(self):
