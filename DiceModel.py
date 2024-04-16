@@ -503,13 +503,117 @@ class DiceParams():
             I[i] = Sopt[i] * Y[i]
             K[i] = (1.0 -dk)**tstep * K[i-1] + tstep * I[i]
 
-            RFACTLONG[i] = (SRF * (CPC[i-1]/CPC[i])**(-elasmu)*rr[i-1])
+            RFACTLONG[i] = (SRF * (CPC[i-1]/CPC[i])**(-elasmu)*rr[i-1]) #Modified/New
             RLONG[i] = (-math.log(RFACTLONG[i-1]/SRF)/(5*t)) #NEW
             RSHORT[i] = (-math.log(RFACTLONG[i-1]/RFACTLONG[i])/(5)) #NEW 
 
             #########################Welfare Functions###################
             PERIODU[i] = ((C[i]*MILLE/L[i])**(1.0-elasmu)-1.0) / (1.0 - elasmu) - 1.0
             TOTPERIODU[i] = PERIODU[i] * L[i] * rr[i]
+
+        output = np.zeros((num_times,50))
+        
+        #Defining some control logic for the model
+        if outputType == 0:
+            
+            #Find the Total utility
+            resultUtility = tstep  * scale1 * np.sum(TOTPERIODU) + scale2
+            resultUtility *= sign 
+            output[0,0] = resultUtility
+
+        elif outputType == 1:
+
+            #Implemented in the originial DICE 2016 implementation
+            #However, might be depricated. Needs to be checked
+            """
+               # EXTRA VALUES COMPUTED LATER
+            CO2PPM = np.zeros(num_times+1)
+            for i in range(1, num_times):
+                CO2PPM[i] = MAT[i] / 2.13
+
+            SOCCC = np.zeros(num_times+1)
+            for i in range(1, num_times):
+                SOCCC[i] = -999.0
+            """
+
+            for iTime in range(1, num_times+1):
+
+                col = 0
+                jTime = iTime - 1
+                output[jTime, col] = EIND[iTime]
+                col += 1  # 0
+                output[jTime, col] = E[iTime]
+                col += 1  # 1
+                output[jTime, col] = CO2PPM[iTime]
+                col += 1  # 2
+                output[jTime, col] = TATM[iTime]
+                col += 1  # 3
+                output[jTime, col] = Y[iTime]
+                col += 1  # 4
+                output[jTime, col] = DAMFRAC[iTime]
+                col += 1  # 5
+                output[jTime, col] = CPC[iTime]
+                col += 1  # 6
+                output[jTime, col] = CPRICE[iTime]
+                col += 1  # 7
+                output[jTime, col] = MIUopt[iTime]
+                col += 1  # 8
+                output[jTime, col] = RI[iTime]
+                col += 1  # 9
+                output[jTime, col] = SOCCC[iTime]
+                col += 1  # 10
+
+                output[jTime, col] = ll[iTime]
+                col += 1  # 11
+                output[jTime, col] = al[iTime]
+                col += 1  # 12
+                output[jTime, col] = YGROSS[iTime]
+                col += 1  # 13
+
+                output[jTime, col] = K[iTime]
+                col += 1  # 14
+                output[jTime, col] = Sopt[iTime]
+                col += 1  # 15
+                output[jTime, col] = II[iTime]
+                col += 1  # 16
+                output[jTime, col] = YNET[iTime]
+                col += 1  # 17
+
+                output[jTime, col] = CCA[iTime]
+                col += 1  # 18
+                output[jTime, col] = CCATOT[iTime]
+                col += 1  # 19
+                output[jTime, col] = ML[iTime]
+                col += 1  # 20
+                output[jTime, col] = MU[iTime]
+                col += 1  # 21
+                output[jTime, col] = FORC[iTime]
+                col += 1  # 22
+                output[jTime, col] = TOCEAN[iTime]
+                col += 1  # 23
+                output[jTime, col] = DAMAGES[iTime]
+                col += 1  # 24
+                output[jTime, col] = ABATECOST[iTime]
+                col += 1  # 25
+                output[jTime, col] = MCABATE[iTime]
+                col += 1  # 26
+                output[jTime, col] = C[iTime]
+                col += 1  # 27
+                output[jTime, col] = PERIODU[iTime]
+                col += 1  # 28
+                output[jTime, col] = CEMUTOTPER[iTime]
+                col += 1  # 29
+                output[jTime, col] = MAT[iTime]
+                col += 1  # 30
+
+            return output
+
+        else:
+            raise Exception("Unknown output type.")
+
+    
+        return output
+
 
     def runModel(self):
         pass
