@@ -173,20 +173,20 @@ class FAIRParams():
                                     (1 - math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i-1)))) + 
                                     self._res0lom[i-1] * math.exp(-self._tstep / (self._tau0 * self.solve_alpha(i-1))))
 
-            self._res1lom[i] = (self._emshare1 * self._tau1 * self.solve_alpha(i+1) * 
+            self._res1lom[i] = (self._emshare1 * self._tau1 * self.solve_alpha(i-1) * 
                                     (self._eco2[i] / 3.667) * 
-                                    (1 - math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1)))) + 
-                                    self._res1lom[i-1] * math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i+1))))
+                                    (1 - math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i-1)))) + 
+                                    self._res1lom[i-1] * math.exp(-self._tstep / (self._tau1 * self.solve_alpha(i))))
 
-            self._res2lom[i] = (self._emshare2 * self._tau2 * self.solve_alpha(i+1) * 
+            self._res2lom[i] = (self._emshare2 * self._tau2 * self.solve_alpha(i-1) * 
                                     (self._eco2[i] / 3.667) * 
-                                    (1 - math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1)))) + 
-                                    self._res2lom[i-1] * math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i+1))))
+                                    (1 - math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i-1)))) + 
+                                    self._res2lom[i-1] * math.exp(-self._tstep / (self._tau2 * self.solve_alpha(i-1))))
 
-            self._res3lom[i] = (self._emshare3 * self._tau3 * self.solve_alpha(i+1) * 
+            self._res3lom[i] = (self._emshare3 * self._tau3 * self.solve_alpha(i) * 
                                     (self._eco2[i] / 3.667) * 
-                                    (1 - math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1)))) + 
-                                    self._res3lom[i-1] * math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i+1))))
+                                    (1 - math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i-1)))) + 
+                                    self._res3lom[i-1] * math.exp(-self._tstep / (self._tau3 * self.solve_alpha(i-1))))
 
             self._calculated_mmat[i] = self._mateq + self._res0lom[i] + self._res1lom[i] + self._res2lom[i] + self._res3lom[i]
             if self._calculated_mmat[i] < 10:
@@ -215,7 +215,7 @@ class FAIRParams():
 
         if 1==1:
 
-            f = open("./results/FAIR_Model.csv" , mode = "w", newline='')
+            f = open("./results/Test_FAIR_Model.csv" , mode = "w", newline='')
             writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 
             header = []
