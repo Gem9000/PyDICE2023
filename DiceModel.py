@@ -128,7 +128,7 @@ class DiceParams():
         ##Legacy constants for the emission parameter. They were't present in 2023
         ##But were referenced in one of the equations so basing this off 2016 version##
         self._eland0 = 2.6 # Carbon emissions from land 2015 (GtC02 per year)
-        self._dland = 0.115 # Decline rate of land emissions (per period)
+        self._deland = 0.115 # Decline rate of land emissions (per period)
 
         ##Emissions Limits########################
 
@@ -232,7 +232,7 @@ class DiceParams():
             self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
             self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
 
-            self._etree[i] = self._eland0 * (1.0 - self._dland) ** (self._t[i]-1) #Not explicitly defined in the 2023 version, but needs to be included
+            self._etree[i] = self._eland0 * (1.0 - self._deland) ** (self._t[i]-1) #Not explicitly defined in the 2023 version, but needs to be included
 
         #Control logic for the emissions control rate
         for i in range(3, self._num_times+1):
@@ -247,7 +247,7 @@ class DiceParams():
             if self._t[i] > 37:
                 self._miuup[i] = self._limmiu2200
             if self._t[i] > 57:
-                self._miuup[t] = self._limmiu2300
+                self._miuup[i] = self._limmiu2300
              
         if 1==1:
 
@@ -321,7 +321,7 @@ class DiceParams():
                          fco22x, t2xco2, rr, gama,
                          tocean0, tatm0, elasmu, prstp, expcost2,
                          k0, dk, pbacktime, CumEmiss0):
-        """ This is the simulation of the DICE 2016 model dynamics. It is optimised
+        """ This is the simulation of the DICE 2023 model dynamics. It is optimised
         for speed. For this reason I have avoided the use of classes. """
     
         LOG2 = np.log(2)
@@ -688,3 +688,174 @@ def runModel(self):
 
 
 print("Success")
+
+'''
+
+###############################################################################
+
+
+def plotFigure(x, y, xlabel, ylabel, title):
+
+    x = x[:-1]
+    y = y[:-1]
+
+#    mpl.style.use('ggplot')
+    fig = plt.figure(figsize=(8, 6), dpi=72, facecolor="white")
+#    axes = plt.subplot(111)
+    plt.plot(x, y)
+    plt.title(title, fontsize=16)
+    plt.xlabel(xlabel, fontsize=12)
+    plt.ylabel(ylabel, fontsize=14)
+    seaborn.despine()
+    fig.tight_layout()
+    return fig
+
+###############################################################################
+
+
+def plotStateToFile(fileName, years, output, x):
+
+    num_times = output.shape[0]
+    output = np.transpose(output)
+
+    pp = PdfPages(fileName)
+
+    TATM = output[3]
+    title = 'Change in Atmosphere Temperature (TATM)'
+    xlabel = 'Years'
+    ylabel = 'Degrees C from 1900'
+    fig = plotFigure(years, TATM, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    TOCEAN = output[23]
+    xlabel = 'Years'
+    title = 'Change in Ocean Temperature (TOCEAN)'
+    ylabel = 'Degrees C from 1900'
+    fig = plotFigure(years, TOCEAN, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    MU = output[21]
+    xlabel = 'Years'
+    title = 'Change in Carbon Concentration Increase in Upper Oceans (MU)'
+    ylabel = 'GtC from 1750'
+    fig = plotFigure(years, MU, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    ML = output[20]
+    xlabel = 'Years'
+    title = 'Change in Carbon Concentration in Lower Oceans (ML)'
+    ylabel = 'GtC from 1750'
+    fig = plotFigure(years, ML, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    DAMAGES = output[24]
+    xlabel = 'Years'
+    title = 'Damages (DAMAGES)'
+    ylabel = 'USD (2010) Trillions per Year'
+    fig = plotFigure(years, DAMAGES, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    DAMFRAC = output[5]
+    xlabel = 'Years'
+    title = 'Damages as a Fraction of Gross Output (DAMFRAC)'
+    ylabel = 'Damages Output Ratio'
+    fig = plotFigure(years, DAMFRAC, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    ABATECOST = output[25]
+    xlabel = 'Years'
+    title = 'Cost of Emissions Reductions (ABATECOST)'
+    ylabel = 'USD (2010) Trillions per Year'
+    fig = plotFigure(years, ABATECOST, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    MCABATE = output[26]
+    xlabel = 'Years'
+    title = 'Marginal abatement cost(MCABATE)'
+    ylabel = '2010 USD per Ton of CO2'
+    fig = plotFigure(years, MCABATE, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    E = output[1]
+    xlabel = 'Years'
+    title = 'Total CO2 emission (E)'
+    ylabel = 'GtCO2 per year'
+    fig = plotFigure(years, E, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    EIND = output[0]
+    xlabel = 'Years'
+    title = 'Total Industrial CO2 emissions (EIND)'
+    ylabel = 'GtCO2 per year'
+    fig = plotFigure(years, EIND, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    MAT = output[30]
+    xlabel = 'Years'
+    title = 'Change in Carbon Concentration in Atmosphere (MAT)'
+    ylabel = 'GtC from 1750'
+    fig = plotFigure(years, MAT, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    FORC = output[22]
+    xlabel = 'Years'
+    title = 'Increase in Radiative Forcing (FORC)'
+    ylabel = 'Watts per M2 from 1900'
+    fig = plotFigure(years, FORC, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    RI = output[9]
+    xlabel = 'Years'
+    title = 'Real Interest Rate (RI)'
+    ylabel = 'Rate per annum'
+    fig = plotFigure(years, RI, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    C = output[27]
+    xlabel = 'Years'
+    title = 'Consumption (C)'
+    ylabel = 'USD (2010) Trillion per Year'
+    fig = plotFigure(years, C, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    Y = output[4]
+    xlabel = 'Years'
+    title = 'Gross Product Net of Abatement and Damages (Y)'
+    ylabel = 'USD (2010) Trillion per Year'
+    fig = plotFigure(years, Y, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    YGROSS = output[13]
+    xlabel = 'Years'
+    title = 'World Gross Product (YGROSS)'
+    ylabel = 'USD (2010) Trillion per Year'
+    fig = plotFigure(years, YGROSS, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    II = output[16]
+    xlabel = 'Years'
+    title = 'Investment (I)'
+    ylabel = 'USD (2010) Trillion per Year'
+    fig = plotFigure(years, II, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    num_times = len(II)
+
+    S = x[num_times:(2*num_times)]
+    xlabel = 'Years'
+    title = 'Optimised: Saving Rates (S)'
+    ylabel = 'Rate'
+    fig = plotFigure(years, S, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    MIU = x[0:num_times]
+    title = 'Optimised: Carbon Emission Control Rate (MIU)'
+    xlabel = 'Years'
+    ylabel = 'Rate'
+    fig = plotFigure(years, MIU, xlabel, ylabel, title)
+    pp.savefig(fig)
+
+    pp.close()
+
+#################################################################
+'''

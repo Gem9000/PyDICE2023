@@ -100,6 +100,18 @@ class FAIRParams():
         self._tbox20 = 1.099454     #Initial temperature box 2 change in 2020
         self._tatm0 =  1.24715      #Initial atmospheric temperature change in 2020 
 
+
+        #Present in DICE 2016 and not in 2023, but needed for the ECO equations 
+        #These need to be checked to see if there are updated versions
+        self._eland0 = 2.6          #Carbon emissions from land 2015 (GtC02 per year)
+        self._deland = 0.115              #Decline rate of land emissions (per period)
+
+
+        #etree(t) = eland0*(1-deland)**(t.val-1);
+
+
+
+
         #Num times should be 81
         #time increment should be 5 years
         self._num_times = num_times
@@ -122,28 +134,35 @@ class FAIRParams():
         '''
         
         #Creating Size arrays so we can index from 1 instead of zero 
-        self._res0lom = np.zeros(num_times+2)
-        self._res1lom =np.zeros(num_times+2)
-        self._res2lom = np.zeros(num_times+2)
-        self._res3lom = np.zeros(num_times+2)
-        self._mmat = np.zeros(num_times+2)
-        self._cacceq = np.zeros(num_times+2)
-        self._force = np.zeros(num_times+2)
-        self._tbox1eq = np.zeros(num_times+2)
-        self._tbox2eq = np.zeros(num_times+2)
-        self._tatmeq = np.zeros(num_times+2)
-        self._irfeqlhs = np.zeros(num_times+2)
-        self._irfeqrhs = np.zeros(num_times+2)
-        self._alpha_t = np.zeros(num_times+2)
-        self._calculated_mmat = np.zeros(num_times+2)
+        self._res0lom = np.zeros(num_times+1)
+        self._res1lom =np.zeros(num_times+1)
+        self._res2lom = np.zeros(num_times+1)
+        self._res3lom = np.zeros(num_times+1)
+        self._mmat = np.zeros(num_times+1)
+        self._cacceq = np.zeros(num_times+1)
+        self._force = np.zeros(num_times+1)
+        self._tbox1eq = np.zeros(num_times+1)
+        self._tbox2eq = np.zeros(num_times+1)
+        self._tatmeq = np.zeros(num_times+1)
+        self._irfeqlhs = np.zeros(num_times+1)
+        self._irfeqrhs = np.zeros(num_times+1)
+        self._alpha_t = np.zeros(num_times+1)
+        self._calculated_mmat = np.zeros(num_times+1)
 
         #Filler for the model
-        self._F_Misc = np.zeros(num_times+2)
+        self._F_Misc = np.zeros(num_times+1)
 
         #Fillers for equations that are in the DICE model equation
-        self._eco2 = np.zeros(num_times+2)
-        self._F_GHGabate = np.zeros(num_times+2)
-        self._CCATOT = np.zeros(num_times+2)
+        self._eco2 = np.zeros(num_times+1)
+        self._F_GHGabate = np.zeros(num_times+1)
+        self._CCATOT = np.zeros(num_times+1)
+        self._etree = np.zeros(num_times+1)
+        self._ygross = np.zeros(num_times+1)
+        self._sigma = np.zeros(num_times+1)
+        self._eind = np.zeros(num_times+1)
+        self._k = np.zeros(num_times+1)
+        self._l = np.zeros(num_times+1)
+        self._al = np.zeros(num_times+1)
         
         #Timestep counter
         self._t = np.arange(0,num_times+2)
@@ -157,13 +176,51 @@ class FAIRParams():
         self._res3lom[1] = self._res30
         self._tbox1eq[1] = self._tbox10
         self._tbox2eq[1] = self._tbox20
-    
+
+        #Used because these values are references in the
+        #DICE Model, but also mentioned in the DFAIR moudle
+
+        #Won't be optimized until the Pyomo optimizer is used
+        MIUopt = np.zeros(num_times+1)
+        Sopt = np.zeros(num_times)
+
+        x = np.zeros(num_times+1)
+
+        #Initilize the equations
+        for i in range(1, num_times+1):
+            MIUopt[i] = x[i-1]          #Optimal emissions control rate GHGS
+            Sopt[i] = x[num_times + i-1]   #Gross savings rate as fraction of gross world product
+
+
+        MILLE = 1000.0 
+
+
+        #Need to initilize some of the equations
+
+
+
+
+
 
         #Changing this to match the format of the DICE Model 
         #If i+1 should be i
         #If i should be i-1
 
         for i in range(2, self._num_times + 1):
+            
+            #Must be conputed since it's used in the eco2 equation
+            self._etree[i] = self._eland0 * (1.0 - self._deland) ** (self._t[i]-1) #Not explicitly defined in the 2023 version, but needs to be included
+
+            #Depends on the t-1 time period
+            self._CCATOT[i] = self._CCATOT[i-1] + self._eco2[i-1] * (5/3.666)
+            self._ygross[i] = al[i] * ((L[i]/MILLE)**(1.0-gama)) * self._k[i]**gama  #Gross world product GROSS of abatement and damages (trillions 20i9 USD per year)
+
+            self._eco2[i] = (sigma[i] * self._ygross[i] + self._etree[i]) * (1-MIUopt) #New
+            self._eind[i] = sigma[i] * YGROSS[i] * (1.0 - MIUopt[i])
+            
+            #ECO2E[i] = (sigma[i] * self._ygross[i] + etree[i] + CO2E_GHGabateB[i]) * (1-MIUopt) #New
+            
+            self._CCATOT[i] = self._CCATOT[i] + self._eco2[i]*(5/3.666)
 
             #Solve for alpha(t) in each time period 
             self._alpha_t[i] = self.solve_alpha(i-1)

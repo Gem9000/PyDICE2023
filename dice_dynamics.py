@@ -138,8 +138,6 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
 
 #Fixed initial values(depricated in the 2023 version included for now)
     #ML[1] = ml0
-    
-    
 
 ###################################Initilizing Equations#################################
         CCATOTEQ[1] = CumEmiss0
