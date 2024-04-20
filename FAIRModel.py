@@ -163,6 +163,7 @@ class FAIRParams():
         self._k = np.zeros(num_times+1)
         self._l = np.zeros(num_times+1)
         self._al = np.zeros(num_times+1)
+        self._gsig = np.zeros(num_times+1)
         
         #Timestep counter
         self._t = np.arange(0,num_times+2)
@@ -206,17 +207,30 @@ class FAIRParams():
         #If i+1 should be i
         #If i should be i-1
 
+        self._e1 = 37.56  #Industrial emissions 2020 (GtCO2 per year)  
+        self._miu1 = 0.05  #Emissions control rate historical 2020 
+        self._q1 = 135.7 #Initial world output 2020 (trillion 2019 USD)
+        
+
+        #NEED TO ASK ABOUT THIS ONE
+        self._sig1 = (self._e1)/(self._q1*(1-self._miu1))
+        self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
+
+
         for i in range(2, self._num_times + 1):
             
             #Must be conputed since it's used in the eco2 equation
+            self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
+            self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
+            
             self._etree[i] = self._eland0 * (1.0 - self._deland) ** (self._t[i]-1) #Not explicitly defined in the 2023 version, but needs to be included
 
             #Depends on the t-1 time period
             self._CCATOT[i] = self._CCATOT[i-1] + self._eco2[i-1] * (5/3.666)
             self._ygross[i] = al[i] * ((L[i]/MILLE)**(1.0-gama)) * self._k[i]**gama  #Gross world product GROSS of abatement and damages (trillions 20i9 USD per year)
 
-            self._eco2[i] = (sigma[i] * self._ygross[i] + self._etree[i]) * (1-MIUopt) #New
-            self._eind[i] = sigma[i] * YGROSS[i] * (1.0 - MIUopt[i])
+            self._eco2[i] = (self._sigma[i] * self._ygross[i] + self._etree[i]) * (1-MIUopt) #New
+            self._eind[i] = self._sigma[i] * self._ygross[i] * (1.0 - MIUopt[i])
             
             #ECO2E[i] = (sigma[i] * self._ygross[i] + etree[i] + CO2E_GHGabateB[i]) * (1-MIUopt) #New
             
