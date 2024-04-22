@@ -26,7 +26,7 @@ def objFn(x, *args):
     """ This is the pass-through function that returns a single float value of
     the objective function for the benefit of the optimisation algorithm. """
 
-    #out = simulateDynamics(x, *args)
+    out = simulateDynamics(x, *args)
     return out[0, 0]
 
 ###############################################################################

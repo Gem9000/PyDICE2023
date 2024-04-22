@@ -3,6 +3,7 @@ import numpy as np
 from numba import njit
 from matplotlib import pyplot
 import seaborn
+import math 
 seaborn.set_theme(style='ticks')
 
 from FAIRModel import FAIRParams

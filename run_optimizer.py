@@ -5,7 +5,8 @@ import numpy as np
 import time
 
 from params import DiceParams
-#from dice_dynamics import simulateDynamics, dumpState
+from FAIRModel import FAIRParams
+from dice_dynamics import simulateDynamics, dumpState
 
 if __name__ == '__main__':
     num_times = 81
