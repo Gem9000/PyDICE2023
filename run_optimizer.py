@@ -73,7 +73,7 @@ if __name__ == '__main__':
     ###########################################################################
     # Optimization
     ###########################################################################
-    opt = SolverFactory('ipopt')
+    opt = SolverFactory('gurobi_persistent')
 
     # Solve the model
     start = time.time()
