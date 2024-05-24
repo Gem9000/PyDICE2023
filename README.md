@@ -46,6 +46,7 @@ The packages and versions used in this implementation are:
 |python-dateutil  |2.9.0.post0|
 |pytz             |2024.1     |
 |pyzmq            |25.1.2     |
+|scipy            |1.13.1     |
 |seaborn          |0.13.2     |
 |six              |1.16.0     |
 |stack-data       |0.6.3      |
