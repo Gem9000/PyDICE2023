@@ -35,7 +35,7 @@ class DiceParams():
 
     '''
     This Class will hold the static runtime 
-    paramerter imputs to the DICE model.
+    parameter imputs to the DICE model.
     '''
 
     def __init__(self, num_times, tstep):
@@ -47,45 +47,47 @@ class DiceParams():
         #Population and technology 
         #########################################################
         
-        self._gama = 0.300 #Capital elasticity in production func.
-        self._pop1 = 7752.9 #Initial world population 2020 (millions)
-        self._popadj = 0.145 # Growth rate to calibrate to 2050 pop projection
-        self._popasym = 10825 #Asymptotic population (millions)
-        self._dk = 0.100 #Deprication on capital (per year)
-        self._q1 = 135.7 #Initial world output 2020 (trillion 2019 USD)
-        self._AL1 = 5.84 #Initial level of total factor productivity
-        self._gA1 = 0.066 #Initial growth rate for TFP per 5 yrs 
-        self._delA = 0.0015 #Decline rate of TFP per 5 yrs 
+        self._gama    = 0.300  #Capital elasticity in production func.
+        self._pop1    = 7752.9 #Initial world population 2020 (millions)
+        self._popadj  = 0.145  #Growth rate to calibrate to 2050 pop projection
+        self._popasym = 10825  #Asymptotic population (millions)
+        self._dk      = 0.100  #Deprication on capital (per year)
+        self._q1      = 135.7  #Initial world output 2020 (trillion 2019 USD)
+        self._AL1     = 5.84   #Initial level of total factor productivity
+        self._gA1     = 0.066  #Initial growth rate for TFP per 5 yrs 
+        self._delA    = 0.0015 #Decline rate of TFP per 5 yrs 
 
         ####################################################################
         #Emissions parameters and Non-CO2 GHG with sigma = emissions/output 
         ####################################################################
 
-        self._gsigma1 = -0.015 #Initial growth of sigma (per year)  
-        self._delgsig = 0.96   #Decline rate of gsigma per period
-        self._asymgsig = -0.005 #Asympototic gsigma  
-        self._e1 = 37.56  #Industrial emissions 2020 (GtCO2 per year)   
-        self._miu1 = 0.05  #Emissions control rate historical 2020 
-        self._fosslim = 6000 #Maximum cumulative extraction fossil fuels (GtC)
-        self._CumEmiss0 = 633.5 #CumEmiss0 Cumulative emissions 2020 (GtC) 
+        self._gsigma1      = -0.015 #Initial growth of sigma (per year)  
+        self._delgsig      = 0.96   #Decline rate of gsigma per period
+        self._asymgsig     = -0.005 #Asympototic gsigma  
+        self._e1           = 37.56  #Industrial emissions 2020 (GtCO2 per year)   
+        self._miu1         = 0.05   #Emissions control rate historical 2020 
+        self._fosslim      = 6000   #Maximum cumulative extraction fossil fuels (GtC)
+        self._CumEmiss0    = 633.5  #CumEmiss0 Cumulative emissions 2020 (GtC)
+        self._emissrat2020 = 1.40   #Ratio of CO2e to industrial CO2 2020
+        self._emissrat2100 = 1.21   #Ratio of CO2e to industrial CO2 2020
 
         ####################################################################
         #Climate damage parameter
         ####################################################################
         
-        self._a1 = 0 #Damage intercept
-        self._a2base = 0.003467 #Damage quadratic term rev 01-13-23
-        self._init__a3 = 2.00 #Damage exponent
+        self._a1        = 0        #Damage intercept
+        self._a2base    = 0.003467 #Damage quadratic term rev 01-13-23
+        self._init__a3  = 2.00     #Damage exponent
 
         ####################################################################
         #Abatement cost
         ####################################################################
 
-        self._expcost2 = 2.6 #Exponent of control cost function                     
-        self._pback2050 = 515.0 #Cost of backstop 2019$ per tCO2 2050                   
-        self._gback  =  -0.012 #Initial cost decline backstop cost per year           
-        self._cprice1 = 6 #Carbon price 2020 2019$ per tCO2                         
-        self._gcprice  = 0.025 #Growth rate of base carbon price per year              
+        self._expcost2  = 2.6    #Exponent of control cost function                     
+        self._pback2050 = 515.0  #Cost of backstop 2019$ per tCO2 2050                   
+        self._gback     = -0.012 #Initial cost decline backstop cost per year           
+        self._cprice1   = 6      #Carbon price 2020 2019$ per tCO2                         
+        self._gcprice   = 0.025  #Growth rate of base carbon price per year              
 
         ####################################################################
         #Limits on emissions controls
@@ -95,44 +97,32 @@ class DiceParams():
         self._limmiu2120 = 1.1   #Emission control limit from 2120          
         self._limmiu2200 = 1.05  #Emission control limit from 2220          
         self._limmiu2300 = 1.0   #Emission control limit from 2300                
-        self._delmiumax  =  0.12 #Emission control delta limit per period   
+        self._delmiumax  = 0.12  #Emission control delta limit per period   
 
         ####################################################################
         #Preferences, growth uncertainty, and timing
         ####################################################################
     
-        self._betaclim = 0.5 #Climate beta                                      
-        self._elasmu   = 0.95 #Elasticity of marginal utility of consumption    
-        self._prstp    = 0.001 #Pure rate of social time preference               
-        self._pi       = 0.05  #Capital risk premium                              
-        self._rartp    = 0    #Risk-adjusted rate of time preference (SET TO ZERO FOR NOW)
-        self._k0       =  295  #Initial capital stock calibrated (1012 2019 USD)  
-        self._siggc1   = 0.01  #Annual standard deviation of consumption growth   
-        self._sig1     = 0 #Carbon intensity 2020 kgCO2-output 2020 (SET TO ZERO FOR NOW)
+        self._betaclim   = 0.5   #Climate beta                                      
+        self._elasmu     = 0.95  #Elasticity of marginal utility of consumption    
+        self._prstp      = 0.001 #Pure rate of social time preference               
+        self._pi         = 0.05  #Capital risk premium                              
+        self._rartp      = 0     #Risk-adjusted rate of time preference (SET TO ZERO FOR NOW)
+        self._k0         = 295   #Initial capital stock calibrated (1012 2019 USD)  
+        self._siggc1     = 0.01  #Annual standard deviation of consumption growth   
+        self._sig1       = 0     #Carbon intensity 2020 kgCO2-output 2020 - could not find value in gams code
 
         ####################################################################
         #Scaling so that MU(C(1)) = 1 and objective function = PV consumption
         ####################################################################
-        self._tstep = tstep #Years in period 
-        self._SRF = 1000000 #Scaling factor discounting
-        self._scale1 = 0.00891061 #Multiplicative scaling coefficient
-        self._scale2 = -6275.91   #Additive scaling coefficient
-
-        
-        ##Legacy equations, may not be relevant for 2023 version
-        #self.a20 = self.a2base
-        #self.lam = self.q
-        #self.
-
-
-        ##Legacy constants for the emission parameter. They were't present in 2023
-        ##But were referenced in one of the equations so basing this off 2016 version##
-        self._eland0 = 2.6 # Carbon emissions from land 2015 (GtC02 per year)
-        self._dland = 0.115 # Decline rate of land emissions (per period)
+        self._tstep      = tstep      #Years in period 
+        self._SRF        = 1000000    #Scaling factor discounting
+        self._scale1     = 0.00891061 #Multiplicative scaling coefficient
+        self._scale2     = -6275.91   #Additive scaling coefficient
 
         ##Emissions Limits########################
 
-        self._miu2 = 0.10 #Second emission limit 
+        self._miu2       = 0.10  #Second emission limit 
 
         ###########################################
 
@@ -156,6 +146,7 @@ class DiceParams():
         self._gcost1 = np.zeros(num_times+1)
         self._gsig = np.zeros(num_times+1)
         self._eland = np.zeros(num_times+1)
+        self._emissrat = np.zeros(num_times+1) #Ratio of CO2e to industrial emissions
         self._cost1tot = np.zeros(num_times+1)
         self._pbacktime = np.zeros(num_times+1)
         self._scc = np.zeros(num_times+1)
@@ -170,7 +161,6 @@ class DiceParams():
         self._varpcc = np.zeros(num_times+1)
         self._rprecaut = np.zeros(num_times+1)
         self._RR1 = np.zeros(num_times+1)
-        self._etree  = np.zeros(num_times+1)
 
         '''PARAMETERS
         L(t)           Level of population and labor
@@ -202,16 +192,14 @@ class DiceParams():
         RR1(t)            STP factor without precautionary factor;
         '''
 
-        #Set relevant values using the paramteters above
-        self._l[1] = self._pop1 #Population 
-        self._gA[1] = self._gA1 #Growth rate
-        self._al[1] = self._AL1 #Initial total factor productivity
-        self._gsig[1] = self._gsigma1 #Initial growth of sigma
-        self._rr[1] = 1.0
+        #Set relevant values using the parameters above
+        self._l[1]     = self._pop1    #Population 
+        self._gA[1]    = self._gA1     #Growth rate
+        self._al[1]    = self._AL1     #Initial total factor productivity
+        self._gsig[1]  = self._gsigma1 #Initial growth of sigma
+        self._rr[1]    = 1.0
         self._miuup[1] = self._miu1
         self._miuup[2] = self._miu2
-        self._etree[1] = self._eland0
-        #varpcc(t)       =  min(Siggc1**2*5*(t.val-1),Siggc1**2*5*47);
 
         self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference 
         
@@ -220,19 +208,23 @@ class DiceParams():
         self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
 
         for i in range(2, self._num_times+1):
-            self._varpcc[i] = min(self._siggc1**2*5*(self._t[i]-1), self._siggc1**2*5*47) #Variance of per capita consumption
-            self._rprecaut[i] = -0.5 * self._varpcc[i-1]* self._elasmu**2 #Precautionary rate of return
-            self._RR1[i] = 1/((1+self._rartp)**(-self._tstep*(self._t[i]-1))) #STP factor without precautionary factor
-            self._rr[i] =   self._RR1[i-1]*(1+ self._rprecaut[i-1]**(self._tstep*(self._t[i] -1)))          #STP factor with precautionary factor 
-            self._l[i] = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Population adjustment over time 
-            self._gA[i] = self._gA1 * np.exp(-self._delA * 5.0 * (self._t[i] - 1)) #NEED TO FIGURE OUT WHAT THIS IS 
-            self._al[i] = self._al[i-1] /((1-self._gA[i-1])) #Degradation of productivity??
-            self._cpricebase[i] = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
-            self._pbacktime[i] = self._pback2050 * math.exp(-5*(0.01 if self.t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates the condition found in the 2023 version
-            self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
-            self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
-
-            self._etree[i] = self._eland0 * (1.0 - self._dland) ** (self._t[i]-1) #Not explicitly defined in the 2023 version, but needs to be included
+            self._varpcc[i]       = min(self._siggc1**2*5*(self._t[i]-1), self._siggc1**2*5*47) #Variance of per capita consumption
+            self._rprecaut[i]     = -0.5 * self._varpcc[i-1]* self._elasmu**2 #Precautionary rate of return
+            self._RR1[i]          = 1/((1+self._rartp)**(-self._tstep*(self._t[i]-1))) #STP factor without precautionary factor
+            self._rr[i]           = self._RR1[i-1]*(1+ self._rprecaut[i-1]**(self._tstep*(self._t[i]-1)))  #STP factor with precautionary factor
+            self._l[i]            = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Population adjustment over time
+            self._gA[i]           = self._gA1 * np.exp(-self._delA * 5.0 * (self._t[i] - 1)) # Growth rate of productivity
+            self._al[i]           = self._al[i-1] /((1-self._gA[i-1])) # Level of total factor productivity
+            self._cpricebase[i]   = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
+            self._pbacktime[i]    = self._pback2050 * math.exp(-5*(0.01 if self._t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates 2023 condition
+            self._gsig[i]         = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (rate of decarbonization)
+            self._sigma[i]        = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
+            if self._t[i] <= 16:
+                self._emissrat[i] = self._emissrat2020 +((self._emissrat2100-self._emissrat2020)/16)*(self._t[i]-1)
+            else:
+                self._emissrat[i] = self._emissrat2100
+            self._sigmatot[i]     = self._sigma[i]*self._emissrat[i]
+            self._cost1tot[i]     = self._pbacktime[i]*self._sigmatot[i]/self._expcost2/1000
 
         #Control logic for the emissions control rate
         for i in range(3, self._num_times+1):
@@ -247,7 +239,7 @@ class DiceParams():
             if self._t[i] > 37:
                 self._miuup[i] = self._limmiu2200
             if self._t[i] > 57:
-                self._miuup[t] = self._limmiu2300
+                self._miuup[i] = self._limmiu2300
              
         if 1==1:
 
@@ -267,6 +259,9 @@ class DiceParams():
             header.append("PBACKTIME")
             header.append("GSIG")
             header.append("SIGMA")
+            header.append("EMISSRAT")
+            header.append("SIGMATOT")
+            header.append("COST1TOT")
             writer.writerow(header)
             
             num_rows = self._num_times + 1
@@ -285,6 +280,9 @@ class DiceParams():
                 row.append(self._pbacktime[i])
                 row.append(self._gsig[i])
                 row.append(self._sigma[i])
+                row.append(self._emissrat[i])
+                row.append(self._sigmatot[i])
+                row.append(self._cost1tot[i])
 
                 writer.writerow(row)
 
@@ -298,7 +296,7 @@ class DiceParams():
             print("Labour:", self._l) # CHECKED OK
             print("Growth rate of productivity", self._gA) # CHECKED OK
             print("Productivity", self._al) # CHECKED OK
-            print("Carbon price based case", self._cpricebase) # AGREES WITH NORDHAUS UNTIL 2235 ??
+            print("Carbon price based case", self._cpricebase) # AGREES WITH NORDHAUS UNTIL 2235
             print("Backstop price", self._pbacktime) # CHECKED OK
             print("Change in sigma", self._gsig) # CHECKED OK
             print("CO2 output ratio:", self._sigma) # CHECKED OK
@@ -312,7 +310,7 @@ class DiceParams():
    #    @njit(cache=True, fastmath=True)
     def simulateDynamics(self, SRF, x, sign, outputType, num_times,
                          tstep, al, ll, sigma, forcoth,
-                         cost1, etree,
+                         cost1, eland,
                          scale1, scale2,
                          ml0, mu0, mat0, cca0,
                          a1, a2, a3,
@@ -325,11 +323,10 @@ class DiceParams():
         for speed. For this reason I have avoided the use of classes. """
     
         LOG2 = np.log(2)
-        L = ll  # NORDHAUS RENAMES IT TO UPPER CASE IN EQUATIONS
+        L = ll  # renamed to upper case in equations
         MILLE = 1000.0  ######NEED TO LOOK AT THIS##############
     
-        # We take care to ensure that the indexing starts at 1 to allow comparison
-        # with matlab
+        # Ensure indexing starts at 1 to allow comparison with matlab
         MIUopt = np.zeros(num_times+1)
         Sopt = np.zeros(num_times+1)
     
@@ -338,11 +335,11 @@ class DiceParams():
 ###############################################################################
 
         for i in range(1, num_times+1):
-            MIUopt[i] = x[i-1]          #Optimal emissions control rate GHGS
+            MIUopt[i] = x[i-1]             #Optimal emissions control rate GHGs
             Sopt[i] = x[num_times + i-1]   #Gross savings rate as fraction of gross world product
     
 ###########################################################################
-#Variabls and nonnegative variables equations
+#Variables and nonnegative variables equations
 ###########################################################################
         
         #Make an instance of the FAIR PARAMETERS class
@@ -352,14 +349,21 @@ class DiceParams():
 
         FORCING = instance._force              #Radiative forcing equation
         TATM = instance._tatmeq                #Initial atmospheric temperature change in 2020
-        TBOX1 = instance._tbox1eq              #Temperaute box 1 law of motion
-        TBOX2 = instance._tbox2eq              #Temperaute box 1 law of motion
+        TBOX1 = instance._tbox1eq              #Temperature box 1 law of motion
+        TBOX2 = instance._tbox2eq              #Temperature box 1 law of motion
         RES0 = instance._res0lom               #Reservoir 0 law of motion
         RES1 = instance._res1lom               #Reservoir 1 law of motion
         RES2 = instance._res2lom               #Reservoir 2 law of motion
         RES3 = instance._res3lom               #Reservoir 3 law of motion
         MAT = instance._mmat                   #Atmospheric concentration equation
         CACC = instance._cacceq                #Accumulated carbon in sinks equation
+
+        ECO2 = instance._eco2                     #Total CO2 emissions (GtCO2 per year)
+        ECO2E = instance._eco2e                   #Total CO2e emissions including abateable nonCO2 GHG (GtCO2 per year)
+        EIND = instance._eind                     #Industrial Emissions (GtCO2 per year)
+        CO2E_GHGabateB = instance._CO2E_GHGabateB #Abateable non-CO2 GHG emissions base
+        F_GHGabate = instance._F_GHGabate         #Forcings abateable nonCO2 GHG
+        ELAND = instance._eland                   #Emissions from deforestation (GtCO2 per year)
         
 
         C = np.zeros(num_times+1)              #Consumption (trillions 2019 US dollars per year)
@@ -381,14 +385,6 @@ class DiceParams():
         RFACTLONG = np.zeros(num_times+1)
         RSHORT    = np.zeros(num_times+1)      #Real interest rate with precautionary(per annum year on year)
         RLONG   = np.zeros(num_times+1)        #Real interest rate from year 0 to T
-        EIND = np.zeros(num_times+1)           #Industrial Emissions (GtCO2 per year)
-        
-        #New
-        ECO2 = np.zeros(num_times+1)           
-        ECO2E = np.zeros(num_times+1)
-        CO2E_GHGabateB = np.zeros(num_times+1)
-        F_GHGabate = np.zeros(num_times+1)
-        #Emissions from deforestation
 
 
 
@@ -415,22 +411,21 @@ class DiceParams():
         PERIODUEQ = np.zeros(num_times+1)      #Instantaneous utility function equation
         #UTILEQ =  np.zeros(num_times+1)        #Objective function
 
-#Fixed initial values(depricated in the 2023 version included for now)
+#Fixed initial values (deprecated in v2023)
     #ML[1] = ml0
     
     
 
-###################################Initilizing Equations#################################
+###################################Initializing Equations#################################
         K[1] = k0
         CCATOTEQ[1] = CumEmiss0
         ##F_GHGabate[1] F_GHGabate2020     #Need to find this value
         
         YGROSS[1] = al[1] * ((L[1]/MILLE)**(1.0-gama)) * K[1]**gama  #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
 
-        ECO2[1] = (sigma[1] * YGROSS[1] + etree[1]) * (1-MIUopt) #New
+        ECO2[1] = (sigma[1] * YGROSS[1] + ELAND[1]) * (1-MIUopt) #New
         EIND[1] = sigma[1] * YGROSS[1] * (1.0 - MIUopt[1])
-        
-        ECO2E[1] = (sigma[1] * YGROSS[1] + etree[1] + CO2E_GHGabateB[1]) * (1-MIUopt) #New
+        ECO2E[1] = (sigma[1] * YGROSS[1] + ELAND[1] + CO2E_GHGabateB[1]) * (1-MIUopt) #New
         
         CCATOT[1] = CCATOT[1] + ECO2[1]*(5/3.666)
         DAMFRAC = (a1 * TATM[1] + a2 * TATM[1] ** a3)  
@@ -440,20 +435,15 @@ class DiceParams():
         MCABATE = pbacktime[1] * MIUopt[1] ** (expcost2-1)
         CPRICE = pbacktime[1] * (MIUopt[1]) **(expcost2-1)
 
-        #CCATOT[1] = CACC[1] + cumetree[1] #Potentially depricated but need to look into this more
-
-        #FORC[1] = fco22x * np.log(MAT[1]/588.000)/LOG2 + forcoth[1]
         DAMFRAC[1] = a1*TATM[1] + a2*TATM[1]**a3
         DAMAGES[1] = YGROSS[1] * DAMFRAC[1]
         ABATECOST[1] = YGROSS[1] * cost1[1] * MIUopt[1]**expcost2
         MCABATE[1] = pbacktime[1] * MIUopt[1]**(expcost2-1)
         CPRICE[1] = pbacktime[1] * (MIUopt[1])**(expcost2-1)
 
-        CACC[1] = cca0  # DOES NOT START TILL PERIOD 2
-        t = 1           #Needed to define this just for one of the
-                        #functions that needed it
+        CACC[1] = cca0  # DOES NOT START UNTIL PERIOD 2
 
-        ########################Economic Initilizations##############
+        ########################Economic Initializations##############
         YNET[1] = YGROSS[1] * (1-DAMFRAC[1])
         Y[1] = YNET[1] - ABATECOST[1]
         C[1] = Y[1] - I[1]
@@ -461,7 +451,7 @@ class DiceParams():
         I[1] = Sopt[1] * Y[1]
 
         RFACTLONG[1] = 1000000
-        RLONG[1] = (-math.log(RFACTLONG[1]/SRF)/(5*t)) #NEW
+        RLONG[1] = (-math.log(RFACTLONG[1]/SRF)/(5*1)) #NEW
         RSHORT[1] = (-math.log(RFACTLONG[1]/RFACTLONG[0])/(5)) #NEW 
 
         #########################Welfare Functions###################

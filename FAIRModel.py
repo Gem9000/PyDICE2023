@@ -14,12 +14,10 @@ from scipy.optimize import fsolve
 
 '''
 ** Equals old FAIR with recalibrated parameters for revised F2xco2 and Millar model.
-** Deletes nonnegative reservoirs. See explanation below
-
-EXPLANATION:
-IMPORTANT PROGRAMMING NOTE. Earlier implementations has reservoirs as non-negative.
-However, these are not physical but mathematical solutions.
-So, they need to be unconstrained so that can have negative emissions.
+** Deletes nonnegative reservoirs. EXPLANATION:
+    Earlier implementations have reservoirs as non-negative.
+    However, these are not physical but mathematical solutions.
+    So, they need to be unconstrained so they can have negative emissions.
 '''
 
 class FAIRParams():
@@ -62,12 +60,31 @@ class FAIRParams():
         self._mateq    = 588           #Equilibrium concentration atmosphere
         self._tbox10   = 0.1477        #Initial temperature box 1 change in 2020
         self._tbox20   = 1.099454      #Initial temperature box 2 change in 2020
-        self._tatm0    =  1.24715      #Initial atmospheric temperature change in 2020 
+        self._tatm0    = 1.24715       #Initial atmospheric temperature change in 2020 
 
         #Num times should be 81
         #time increment should be 5 years
-        self._num_times = num_times
+        self._num_times      = num_times
         self._time_increment = np.arange(0,self._num_times+1)
+
+        # Parameters for non-industrial emission (Assumes abateable share of non-CO2 GHG is 65%)
+        self._eland0           = 5.9     # Carbon emissions from land 2015 (GtCO2 per year)
+        self._deland           = 0.1     # Decline rate of land emissions (per period)
+        self._F_Misc2020       = -0.054  # Non-abatable forcings 2020
+        self._F_Misc2100       = 0.265   # Non-abatable forcings 2100
+        self._F_GHGabate2020   = 0.518   # Forcings of abatable nonCO2 GHG
+        self._F_GHGabate2100   = 0.957   # Forcings of abatable nonCO2 GHG
+        self._ECO2eGHGB2020    = 9.96    # Emis of abatable nonCO2 GHG GtCO2e 2020
+        self._ECO2eGHGB2100    = 15.5    # Emis of abatable nonCO2 GHG GtCO2e 2100
+        self._Fcoef1           = 0.00955 # Coefficient of nonco2 abateable emissions
+        self._Fcoef2           = 0.861   # Coefficient of nonco2 abateable emissions
+
+        self._CO2E_GHGabateB   = np.zeros(num_times+2) #Abateable non-CO2 GHG emissions base
+        self._CO2E_GHGabateact = np.zeros(num_times+2) #Abateable non-CO2 GHG emissions base (actual)
+        self._F_Misc           = np.zeros(num_times+2) #Non-abateable forcings (GHG and other)
+        self._sigmatot         = np.zeros(num_times+2) #Emissions output ratio for CO2e
+        self._FORC_CO2         = np.zeros(num_times+2) #CO2 Forcings
+
 
         '''
         EQUATIONS
@@ -83,6 +100,7 @@ class FAIRParams():
         TBOX2EQ(t)      Temperature box 2 law of motion
         IRFeqLHS(t)     Left-hand side of IRF100 equation
         IRFeqRHS(t)     Right-hand side of IRF100 equation
+        ELAND(t)        Emissions from deforestation (GtCO2 per year)
         '''
         
         #Creating Size arrays so we can index from 1 instead of zero 
@@ -101,12 +119,12 @@ class FAIRParams():
         self._alpha_t         = np.zeros(num_times+2)
         self._calculated_mmat = np.zeros(num_times+2)
 
-        #Filler for the model
-        self._F_Misc          = np.zeros(num_times+2)
-
-        #Fillers for equations that are in the DICE model equation
-        self._eco2            = np.zeros(num_times+2)
-        self._F_GHGabate      = np.zeros(num_times+2)
+        # variables from nonco2 forcings include
+        self._eco2            = np.zeros(num_times+2) #Total CO2 emissions (GtCO2 per year)
+        self._eco2e           = np.zeros(num_times+2) #Total CO2e emissions including abateable nonCO2 GHG (GtCO2 per year)
+        self._F_GHGabate      = np.zeros(num_times+2) #Forcings abateable nonCO2 GHG
+        self._eind            = np.zeros(num_times+2) #Industrial CO2 emissions (GtCO2 per yr)
+        self._eland           = np.zeros(num_times+2) #Emissions from deforestation (GtCO2 per year)
         self._CCATOT          = np.zeros(num_times+2)
         
         #Timestep counter
@@ -121,6 +139,7 @@ class FAIRParams():
         self._res3lom[1] = self._res30
         self._tbox1eq[1] = self._tbox10
         self._tbox2eq[1] = self._tbox20
+        self._eland[1]   = self._eland0
     
         for i in range(1, self._num_times + 1):
 
@@ -168,6 +187,15 @@ class FAIRParams():
 
             self._cacceq[i] = (self._CCATOT[i] - (self._mmat[i] - self._mateq))
 
+            self._eland[i+1] = self._eland0 * (1 - self._deland) ** (self._t[i+1]-1)
+
+            if self._t[i] <= 16:
+                self._CO2E_GHGabateB[i] = self._ECO2eGHGB2020 + ((self._ECO2eGHGB2100-self._ECO2eGHGB2020)/16)*(self._t[i]-1)
+                self._F_Misc[i]=self._F_Misc2020 + ((self._F_Misc2100-self._F_Misc2020)/16)*(self._t[i]-1)
+            else:
+                self._CO2E_GHGabateB[i] = self._ECO2eGHGB2100
+                self._F_Misc[i]=self._F_Misc2100
+
         #Adding in additional code for creating a CSV with the fair model 
         #Equation values
 
@@ -189,6 +217,9 @@ class FAIRParams():
             header.append("Temp. box 1")
             header.append("Temp. box 2")
             header.append("Radiative Forcing")
+            header.append("Abateable non-CO2 GHG emissions base")
+            header.append("Non-abateable forcings (GHG and other)")
+            header.append("Emissions from deforestation (GtCO2 per year)")
             writer.writerow(header)
 
             num_rows = self._num_times + 1
@@ -207,6 +238,9 @@ class FAIRParams():
                 row.append(self._tbox1eq[i])
                 row.append(self._tbox2eq[i])
                 row.append(self._force[i])
+                row.append(self._CO2E_GHGabateB[i])
+                row.append(self._F_Misc[i])
+                row.append(self._eland[i])
 
                 writer.writerow(row)
 

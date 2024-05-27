@@ -38,13 +38,15 @@ class DiceParams():
         #Emissions parameters and Non-CO2 GHG with sigma = emissions/output 
         ####################################################################
 
-        self._gsigma1   = -0.015 #Initial growth of sigma (per year)  
-        self._delgsig   = 0.96   #Decline rate of gsigma per period
-        self._asymgsig  = -0.005 #Asympototic gsigma  
-        self._e1        = 37.56  #Industrial emissions 2020 (GtCO2 per year)   
-        self._miu1      = 0.05   #Emissions control rate historical 2020 
-        self._fosslim   = 6000   #Maximum cumulative extraction fossil fuels (GtC)
-        self._CumEmiss0 = 633.5  #CumEmiss0 Cumulative emissions 2020 (GtC) 
+        self._gsigma1      = -0.015 #Initial growth of sigma (per year)  
+        self._delgsig      = 0.96   #Decline rate of gsigma per period
+        self._asymgsig     = -0.005 #Asympototic gsigma  
+        self._e1           = 37.56  #Industrial emissions 2020 (GtCO2 per year)   
+        self._miu1         = 0.05   #Emissions control rate historical 2020 
+        self._fosslim      = 6000   #Maximum cumulative extraction fossil fuels (GtC)
+        self._CumEmiss0    = 633.5  #CumEmiss0 Cumulative emissions 2020 (GtC) 
+        self._emissrat2020 = 1.40   #Ratio of CO2e to industrial CO2 2020
+        self._emissrat2100 = 1.21   #Ratio of CO2e to industrial CO2 2020
 
         ####################################################################
         #Climate damage parameter
@@ -95,11 +97,6 @@ class DiceParams():
         self._scale1 = 0.00891061 #Multiplicative scaling coefficient
         self._scale2 = -6275.91   #Additive scaling coefficient
 
-        
-        ##Legacy equations, may not be relevant for 2023 version
-        #self.a20 = self.a2base
-        #self.lam = self.q
-
         ##Emissions Limits########################
 
         self._miu2 = 0.10 #Second emission limit 
@@ -126,6 +123,7 @@ class DiceParams():
         self._gcost1     = np.zeros(num_times+1)
         self._gsig       = np.zeros(num_times+1)
         self._eland      = np.zeros(num_times+1)
+        self._emissrat   = np.zeros(num_times+1)
         self._cost1tot   = np.zeros(num_times+1)
         self._pbacktime  = np.zeros(num_times+1)
         self._scc        = np.zeros(num_times+1)
@@ -187,17 +185,23 @@ class DiceParams():
         self._sigma[1] = self._sig1 
 
         for i in range(2, self._num_times+1):
-            self._varpcc[i] = min(self._siggc1**2*5*(self._t[i]-1), self._siggc1**2*5*47) #Variance of per capita consumption
-            self._rprecaut[i] = -0.5 * self._varpcc[i-1]* self._elasmu**2 #Precautionary rate of return
-            self._RR1[i] = 1/((1+self._rartp)**(-self._tstep*(self._t[i]-1))) #STP factor without precautionary factor
-            self._rr[i] =   self._RR1[i-1]*(1+ self._rprecaut[i-1]**(self._tstep*(self._t[i] -1))) #STP factor with precautionary factor 
-            self._l[i] = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Level of population and labor 
-            self._gA[i] = self._gA1 * np.exp(-self._delA * 5.0 * (self._t[i] - 1)) #Growth rate of productivity
-            self._al[i] = self._al[i-1] /((1-self._gA[i-1])) #Level of total factor productivity
-            self._cpricebase[i] = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
-            self._pbacktime[i] = self._pback2050 * math.exp(-5*(0.01 if self._t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates the condition found in the 2023 version
-            self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
-            self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1]) #CO2-emissions output ratio
+            self._varpcc[i]       = min(self._siggc1**2*5*(self._t[i]-1), self._siggc1**2*5*47) #Variance of per capita consumption
+            self._rprecaut[i]     = -0.5 * self._varpcc[i-1]* self._elasmu**2 #Precautionary rate of return
+            self._RR1[i]          = 1/((1+self._rartp)**(-self._tstep*(self._t[i]-1))) #STP factor without precautionary factor
+            self._rr[i]           = self._RR1[i-1]*(1+ self._rprecaut[i-1]**(self._tstep*(self._t[i]-1)))  #STP factor with precautionary factor
+            self._l[i]            = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Population adjustment over time
+            self._gA[i]           = self._gA1 * np.exp(-self._delA * 5.0 * (self._t[i] - 1)) # Growth rate of productivity
+            self._al[i]           = self._al[i-1] /((1-self._gA[i-1])) # Level of total factor productivity
+            self._cpricebase[i]   = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
+            self._pbacktime[i]    = self._pback2050 * math.exp(-5*(0.01 if self._t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates 2023 condition
+            self._gsig[i]         = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (rate of decarbonization)
+            self._sigma[i]        = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
+            if self._t[i] <= 16:
+                self._emissrat[i] = self._emissrat2020 +((self._emissrat2100-self._emissrat2020)/16)*(self._t[i]-1)
+            else:
+                self._emissrat[i] = self._emissrat2100
+            self._sigmatot[i]     = self._sigma[i]*self._emissrat[i]
+            self._cost1tot[i]     = self._pbacktime[i]*self._sigmatot[i]/self._expcost2/1000
 
         #Control logic for the emissions control rate
         for i in range(3, self._num_times+1):
@@ -236,6 +240,9 @@ class DiceParams():
             header.append("PBACKTIME")
             header.append("GSIG")
             header.append("SIGMA")
+            header.append("EMISSRAT")
+            header.append("SIGMATOT")
+            header.append("COST1TOT")
             writer.writerow(header)
             
             num_rows = self._num_times + 1
@@ -254,6 +261,9 @@ class DiceParams():
                 row.append(self._pbacktime[i])
                 row.append(self._gsig[i])
                 row.append(self._sigma[i])
+                row.append(self._emissrat[i])
+                row.append(self._sigmatot[i])
+                row.append(self._cost1tot[i])
 
                 writer.writerow(row)
 

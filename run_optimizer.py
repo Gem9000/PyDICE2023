@@ -27,18 +27,13 @@ if __name__ == '__main__':
     '''
     Fix the argsv in here
     '''
-
-    argsv = [-1.0, outputType, num_times,
-             p._tstep,
-             p._al, p._l, p._sigma, p._cumetree, p._forcoth,
-             p._cost1, p._etree, p._scale1, p._scale2,
-             p._ml0, p._mu0, p._mat0, p._cca0,
-             p._a1, p._a2, p._a3,
-             p._c1, p._c3, p._c4,
-             p._b11, p._b12, p._b21, p._b22, p._b32, p._b23, p._b33,
-             p._fco22x, p._t2xco2,
+# p._fco22x, p._tatm0 in FAIRmodel
+    argsv = [-1.0, outputType, num_times, p._tstep,
+             p._al, p._l, p._sigma,
+             p._cost1tot, p._eland, p._scale1, p._scale2,
+             p._a1, p._a2base, p._init__a3,
              p._rr, p._gama,
-             p._tocean0, p._tatm0, p._elasmu, p._prstp, p._expcost2,
+             p._elasmu, p._prstp, p._expcost2,
              p._k0, p._dk, p._pbacktime,
              scc_index, e_bump, c_bump]
 
