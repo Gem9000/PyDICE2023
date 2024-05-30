@@ -1,6 +1,7 @@
 '''
 Created 02/23/2024 
 Author: George Moraites
+Edited by Jacob Wessel
 Adapted From: domokane dice_params.py
 '''
 
@@ -28,7 +29,7 @@ class DiceParams():
         self._pop1    = 7752.9 #Initial world population 2020 (millions)
         self._popadj  = 0.145  #Growth rate to calibrate to 2050 pop projection
         self._popasym = 10825  #Asymptotic population (millions)
-        self._dk      = 0.100  #Deprication on capital (per year)
+        self._dk      = 0.100  #Deprecation on capital (per year)
         self._q1      = 135.7  #Initial world output 2020 (trillion 2019 USD)
         self._AL1     = 5.84   #Initial level of total factor productivity
         self._gA1     = 0.066  #Initial growth rate for TFP per 5 yrs 
@@ -98,10 +99,8 @@ class DiceParams():
         self._scale2 = -6275.91   #Additive scaling coefficient
 
         ##Emissions Limits########################
-
         self._miu2 = 0.10 #Second emission limit 
-
-        ###########################################
+        ##########################################
 
         ##################################################################
         #Functions
@@ -177,12 +176,11 @@ class DiceParams():
         self._rr[1]    = 1.0
         self._miuup[1] = self._miu1
         self._miuup[2] = self._miu2
-
-        self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference 
+        self._rartp    = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adj. rate of time preference 
         
         #NEED TO ASK ABOUT THIS ONE
         self._sig1 = (self._e1)/(self._q1*(1-self._miu1))
-        self._sigma[1] = self._sig1 
+        self._sigma[1] = self._sig1
 
         for i in range(2, self._num_times+1):
             self._varpcc[i]       = min(self._siggc1**2*5*(self._t[i]-1), self._siggc1**2*5*47) #Variance of per capita consumption
@@ -195,7 +193,7 @@ class DiceParams():
             self._cpricebase[i]   = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
             self._pbacktime[i]    = self._pback2050 * math.exp(-5*(0.01 if self._t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates 2023 condition
             self._gsig[i]         = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (rate of decarbonization)
-            self._sigma[i]        = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
+            self._sigma[i]        = self._sigma[i-1]*math.exp(5*self._gsig[i-1]) #CO2-emissions output ratio
             if self._t[i] <= 16:
                 self._emissrat[i] = self._emissrat2020 +((self._emissrat2100-self._emissrat2020)/16)*(self._t[i]-1)
             else:

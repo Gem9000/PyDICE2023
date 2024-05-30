@@ -1,6 +1,7 @@
 '''
 Created 02/23/2024 
 Author: George Moraites
+Edited by Jacob Wessel
 Adapted From: domokane DICEModel.py
 '''
 
@@ -419,7 +420,6 @@ class DiceParams():
 ###################################Initializing Equations#################################
         K[1] = k0
         CCATOTEQ[1] = CumEmiss0
-        ##F_GHGabate[1] F_GHGabate2020     #Need to find this value
         
         YGROSS[1] = al[1] * ((L[1]/MILLE)**(1.0-gama)) * K[1]**gama  #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
 
