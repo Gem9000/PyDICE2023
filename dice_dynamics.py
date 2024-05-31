@@ -200,7 +200,7 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
             I[i] = Sopt[i] * Y[i]
 
             # this equation is a <= inequality and needs to be treated as such
-            K[i] = (1.0 - dk)**tstep * K[i-1] + tstep * I[i]
+            #K[i] = (1.0 - dk)**tstep * K[i-1] + tstep * I[i]
 
             RFACTLONG[i] = (SRF * (CPC[i]/CPC[i-1])**(-elasmu)*rr[i]) #Modified/New
             RLONG[i] = -math.log(RFACTLONG[i]/SRF)/(5*(i-1)) #NEW
