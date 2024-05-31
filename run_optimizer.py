@@ -10,7 +10,7 @@ import numpy as np
 import time
 
 from params import DiceParams
-#from dice_dynamics import simulateDynamics, dumpState
+from dice_dynamics import simulateDynamics, dumpState
 
 if __name__ == '__main__':
     num_times = 81
@@ -65,8 +65,8 @@ if __name__ == '__main__':
     model.t = RangeSet(1, num_times)
 
     # Variables
-    #model.S = Var(model.t, bounds=(0.1, 0.9))
-    #model.MIU = Var(model.t, bounds=(0.01, 1.0))
+    model.S = Var(model.t, bounds=(0.1, 0.9))
+    model.MIU = Var(model.t, bounds=(0.01, 1.0))
 
     # Objective Function
     def obj_rule(model):
@@ -81,6 +81,10 @@ if __name__ == '__main__':
     def savings_constraint_rule(model, t):
         return (model.S[t] >= 0.1) if t > num_times - 10 else (model.S[t] >= 0.1 and model.S[t] <= 0.9)
     model.savings_constraint = Constraint(model.t, rule=savings_constraint_rule)
+
+    # def capital_stock_constraint(model,t):
+    #     K[i] <= (1.0 - dk)**tstep * K[i-1] + tstep * I[i]
+    
 
     ###########################################################################
     # Optimization

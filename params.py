@@ -133,7 +133,7 @@ class DiceParams():
         self._abaterat = np.zeros(num_times+1)
         self._miuup = np.zeros(num_times+1)
         self._gbacktime = np.zeros(num_times+1)
-        self._rr = np.zerors(num_times+1) 
+        self._rr = np.zeros(num_times+1) 
         self._varpcc = np.zeros(num_times+1)
         self._rprecaut = np.zeros(num_times+1)
         self._RR1 = np.zeros(num_times+1)
