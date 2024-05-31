@@ -25,9 +25,9 @@ seaborn.set_theme(style='ticks')
 @njit(cache=True, fastmath=True)
 def objFn(x, *args):
     """ This is the pass-through function that returns a single float value of
-    the objective function for the benefit of the optimisation algorithm. """
+    the objective function for the benefit of the optimization algorithm. """
 
-    #out = simulateDynamics(x, *args)
+    out = simulateDynamics(x, *args)
     return out[0, 0]
 
 ###############################################################################
@@ -104,14 +104,14 @@ class DiceParams():
         #Preferences, growth uncertainty, and timing
         ####################################################################
     
-        self._betaclim   = 0.5   #Climate beta                                      
-        self._elasmu     = 0.95  #Elasticity of marginal utility of consumption    
-        self._prstp      = 0.001 #Pure rate of social time preference               
-        self._pi         = 0.05  #Capital risk premium                              
-        self._rartp      = 0     #Risk-adjusted rate of time preference (SET TO ZERO FOR NOW)
-        self._k0         = 295   #Initial capital stock calibrated (1012 2019 USD)  
-        self._siggc1     = 0.01  #Annual standard deviation of consumption growth   
-        self._sig1       = 0     #Carbon intensity 2020 kgCO2-output 2020 - could not find value in gams code
+        self._betaclim   = 0.5   #Climate beta
+        self._elasmu     = 0.95  #Elasticity of marginal utility of consumption
+        self._prstp      = 0.001 #Pure rate of social time preference
+        self._pi         = 0.05  #Capital risk premium
+        self._k0         = 295   #Initial capital stock calibrated (1012 2019 USD)
+        self._siggc1     = 0.01  #Annual standard deviation of consumption growth
+        self._rartp      = self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference
+        self._sig1       = (self._e1)/(self._q1*(1-self._miu1)) #Carbon intensity 2020 kgCO2-output 2020 - could not find value in gams code
 
         ####################################################################
         #Scaling so that MU(C(1)) = 1 and objective function = PV consumption
@@ -121,11 +121,10 @@ class DiceParams():
         self._scale1     = 0.00891061 #Multiplicative scaling coefficient
         self._scale2     = -6275.91   #Additive scaling coefficient
 
-        ##Emissions Limits########################
-
-        self._miu2       = 0.10  #Second emission limit 
-
-        ###########################################
+        ####################################################################
+        #Emissions Limits
+        ####################################################################
+        self._miu2       = 0.10  #Second emission limit
 
         ##################################################################
         #Functions
@@ -137,7 +136,6 @@ class DiceParams():
         self._t = np.arange(0,num_times+1)
 
         #Create size arrays so we can index from 1 instead of 0
-        self._rartp = np.zeros(num_times+1)
         self._l = np.zeros(num_times+1)
         self._al = np.zeros(num_times+1)
         self._sigma = np.zeros(num_times+1)
@@ -201,12 +199,7 @@ class DiceParams():
         self._rr[1]    = 1.0
         self._miuup[1] = self._miu1
         self._miuup[2] = self._miu2
-
-        self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference 
-        
-        #NEED TO ASK ABOUT THIS ONE
-        self._sig1 = (self._e1)/(self._q1*(1-self._miu1))
-        self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
+        self._sigma[1] = self._sig1
 
         for i in range(2, self._num_times+1):
             self._varpcc[i]       = min(self._siggc1**2*5*(self._t[i]-1), self._siggc1**2*5*47) #Variance of per capita consumption
@@ -310,7 +303,7 @@ class DiceParams():
 
    #    @njit(cache=True, fastmath=True)
     def simulateDynamics(self, SRF, x, sign, outputType, num_times,
-                         tstep, al, ll, sigma, forcoth,
+                         tstep, al, ll, sigma,
                          cost1, eland,
                          scale1, scale2,
                          ml0, mu0, mat0, cca0,
@@ -320,19 +313,19 @@ class DiceParams():
                          fco22x, t2xco2, rr, gama,
                          tocean0, tatm0, elasmu, prstp, expcost2,
                          k0, dk, pbacktime, CumEmiss0):
-        """ This is the simulation of the DICE 2016 model dynamics. It is optimised
+        """ This is the simulation of the DICE 2023 model dynamics. It is optimized
         for speed. For this reason I have avoided the use of classes. """
     
         LOG2 = np.log(2)
-        L = ll  # renamed to upper case in equations
-        MILLE = 1000.0  ######NEED TO LOOK AT THIS##############
+        L = ll  
+        MILLE = 1000
     
         # Ensure indexing starts at 1 to allow comparison with matlab
         MIUopt = np.zeros(num_times+1)
         Sopt = np.zeros(num_times+1)
     
 ###############################################################################
-# Set the optimisation variables
+# Set the optimization variables
 ###############################################################################
 
         for i in range(1, num_times+1):
@@ -346,8 +339,7 @@ class DiceParams():
         #Make an instance of the FAIR PARAMETERS class
         instance = FAIRParams()
 
-        #These are already initilized to zero in the FAIR class 
-
+        #These are already initialized to zero in the FAIR class 
         FORCING = instance._force              #Radiative forcing equation
         TATM = instance._tatmeq                #Initial atmospheric temperature change in 2020
         TBOX1 = instance._tbox1eq              #Temperature box 1 law of motion
@@ -388,7 +380,6 @@ class DiceParams():
         RLONG   = np.zeros(num_times+1)        #Real interest rate from year 0 to T
 
 
-
 #Emissions and Damages
         CCATOTEQ = np.zeros(num_times+1)       #Cumulative total carbon emissions
         DAMFRACEQ = np.zeros(num_times+1)      #Equation for damage fraction
@@ -412,10 +403,6 @@ class DiceParams():
         PERIODUEQ = np.zeros(num_times+1)      #Instantaneous utility function equation
         #UTILEQ =  np.zeros(num_times+1)        #Objective function
 
-#Fixed initial values (deprecated in v2023)
-    #ML[1] = ml0
-    
-    
 
 ###################################Initializing Equations#################################
         K[1] = k0
@@ -428,12 +415,8 @@ class DiceParams():
         ECO2E[1] = (sigma[1] * YGROSS[1] + ELAND[1] + CO2E_GHGabateB[1]) * (1-MIUopt) #New
         
         CCATOT[1] = CCATOT[1] + ECO2[1]*(5/3.666)
-        DAMFRAC = (a1 * TATM[1] + a2 * TATM[1] ** a3)  
-        DAMAGES = YGROSS[1] * DAMFRAC[1]
-        
-        ABATECOST = YGROSS[1] * cost1[1] * (MIUopt[1] ** expcost2) #NEEDS TO BE CHECKED
-        MCABATE = pbacktime[1] * MIUopt[1] ** (expcost2-1)
-        CPRICE = pbacktime[1] * (MIUopt[1]) **(expcost2-1)
+        DAMFRAC[1] = (a1 * TATM[1] + a2 * TATM[1] ** a3)  
+        DAMAGES[1] = YGROSS[1] * DAMFRAC[1]
 
         DAMFRAC[1] = a1*TATM[1] + a2*TATM[1]**a3
         DAMAGES[1] = YGROSS[1] * DAMFRAC[1]
@@ -450,14 +433,14 @@ class DiceParams():
         CPC[1] = MILLE * C[1]/L[1]
         I[1] = Sopt[1] * Y[1]
 
+        RFACTLONG[0] = 1000000
         RFACTLONG[1] = 1000000
         RLONG[1] = (-math.log(RFACTLONG[1]/SRF)/(5*1)) #NEW
-        RSHORT[1] = (-math.log(RFACTLONG[1]/RFACTLONG[0])/(5)) #NEW 
+        RSHORT[1] = (-math.log(RFACTLONG[1]/RFACTLONG[0])/5) #NEW 
 
         #########################Welfare Functions###################
         PERIODU[1] = ((C[1]*MILLE/L[1])**(1.0-elasmu)-1.0) / (1.0 - elasmu) - 1.0
         TOTPERIODU[1] = PERIODU[1] * L[1] * rr[1]
-
 
         #Many of the equations in the module have been put into
         #The separate DFAIR class. The equations that the DFAIR modules rely
@@ -466,11 +449,206 @@ class DiceParams():
 
             #Depends on the t-1 time period
             CCATOT[i] = CCATOT[i-1] + ECO2[i-1] * (5/3.666)
+            YGROSS[i] = al[i] * ((L[i]/MILLE)**(1.0-gama)) * K[i]**gama  #Gross world product GROSS of abatement and damages (trillions 20i9 USD per year)
 
+            ECO2[i] = (sigma[i] * YGROSS[i] + ELAND[i]) * (1-MIUopt) #New
+            EIND[i] = sigma[i] * YGROSS[i] * (1.0 - MIUopt[i])
+            
+            ECO2E[i] = (sigma[i] * YGROSS[i] + ELAND[i] + CO2E_GHGabateB[i]) * (1-MIUopt) #New
+            
+            CCATOT[i] = CCATOT[i] + ECO2[i]*(5/3.666)
+            DAMFRAC[i] = (a1 * TATM[i] + a2 * TATM[i] ** a3)  
+            DAMAGES[i] = YGROSS[i] * DAMFRAC[i]
 
+            DAMFRAC[i] = a1*TATM[i] + a2*TATM[i]**a3
+            DAMAGES[i] = YGROSS[i] * DAMFRAC[i]
+            ABATECOST[i] = YGROSS[i] * cost1[i] * MIUopt[i]**expcost2
+            MCABATE[i] = pbacktime[i] * MIUopt[i]**(expcost2-1)
+            CPRICE[i] = pbacktime[i] * (MIUopt[i])**(expcost2-1)
 
-    def runModel(self):
+            ########################Economic##############################
+            YNET[i] = YGROSS[i] * (i-DAMFRAC[i])
+            Y[i] = YNET[i] - ABATECOST[i]
+            C[i] = Y[i] - I[i]
+            CPC[i] = MILLE * C[i]/L[i]
+            I[i] = Sopt[i] * Y[i]
+
+            # this equation is a <= inequality and needs to be treated as such
+            K[i] = (1.0 - dk)**tstep * K[i-1] + tstep * I[i]
+
+            RFACTLONG[i] = (SRF * (CPC[i]/CPC[i-1])**(-elasmu)*rr[i]) #Modified/New
+            RLONG[i] = -math.log(RFACTLONG[i]/SRF)/(5*(i-1)) #NEW
+            RSHORT[i] = (-math.log(RFACTLONG[i]/RFACTLONG[i-1])/5) #NEW 
+
+            #########################Welfare Functions###################
+            PERIODU[i] = ((C[i]*MILLE/L[i])**(1.0-elasmu)-1.0) / (1.0 - elasmu) - 1.0
+            TOTPERIODU[i] = PERIODU[i] * L[i] * rr[i]
+
+        output = np.zeros((num_times,50))
+        
+        #Defining some control logic for the model
+        if outputType == 0:
+            
+            #Find the Total utility
+            resultUtility = tstep  * scale1 * np.sum(TOTPERIODU) + scale2
+            resultUtility *= sign 
+            output[0,0] = resultUtility
+
+        elif outputType == 1:
+
+            #Implemented in the original DICE 2016 implementation
+            #However, might be depricated. Needs to be checked
+            """
+               # EXTRA VALUES COMPUTED LATER
+            CO2PPM = np.zeros(num_times+1)
+            for i in range(1, num_times):
+                CO2PPM[i] = MAT[i] / 2.13
+
+            SOCCC = np.zeros(num_times+1)
+            for i in range(1, num_times):
+                SOCCC[i] = -999.0
+            """
+
+            for iTime in range(1, num_times+1):
+                col = 0
+                jTime = iTime - 1
+                output[jTime, col] = EIND[iTime]
+                col += 1  # 0
+                output[jTime, col] = ECO2[iTime]
+                col += 1  # 1
+                output[jTime, col] = ECO2E[iTime]
+                col += 1  # 2
+                output[jTime, col] = TATM[iTime]
+                col += 1  # 3
+                output[jTime, col] = Y[iTime]
+                col += 1  # 4
+                output[jTime, col] = DAMFRAC[iTime]
+                col += 1  # 5
+                output[jTime, col] = CPC[iTime]
+                col += 1  # 6
+                output[jTime, col] = CPRICE[iTime]
+                col += 1  # 7
+                output[jTime, col] = MIUopt[iTime]
+                col += 1  # 8
+                output[jTime, col] = rr[iTime]
+                col += 1  # 9
+                output[jTime, col] = ll[iTime]
+                col += 1  # 10
+                output[jTime, col] = al[iTime]
+                col += 1  # 11
+                output[jTime, col] = YGROSS[iTime]
+                col += 1  # 12
+                output[jTime, col] = K[iTime]
+                col += 1  # 13
+                output[jTime, col] = Sopt[iTime]
+                col += 1  # 14
+                output[jTime, col] = I[iTime]
+                col += 1  # 15
+                output[jTime, col] = YNET[iTime]
+                col += 1  # 16
+                output[jTime, col] = CCATOT[iTime]
+                col += 1  # 17
+                output[jTime, col] = DAMAGES[iTime]
+                col += 1  # 18
+                output[jTime, col] = ABATECOST[iTime]
+                col += 1  # 19
+                output[jTime, col] = MCABATE[iTime]
+                col += 1  # 20
+                output[jTime, col] = C[iTime]
+                col += 1  # 21
+                output[jTime, col] = PERIODU[iTime]
+                col += 1  # 22
+                output[jTime, col] = TOTPERIODU[iTime]
+                col += 1  # 23
+                output[jTime, col] = RFACTLONG[iTime]
+                col += 1  # 24
+                output[jTime, col] = RLONG[iTime]
+                col += 1  # 25
+                output[jTime, col] = RSHORT[iTime]
+                col += 1  # 26
+                output[jTime,col] = ELAND[iTime]
+                col += 1 # 27
+            return output
+
+        else:
+            raise Exception("Unknown output type.")
+    
+        return output
+    
+
+def dumpState(years, output, filename):
+
+    f = open(filename, mode="w", newline='')
+    writer = csv.writer(f, delimiter=',', quotechar='"',
+                        quoting=csv.QUOTE_MINIMAL)
+
+    header = []
+    header.append("EIND")
+    header.append("ECO2")
+    header.append("ECO2E")
+    header.append("TATM")
+    header.append("Y")
+    header.append("DAMFRAC")
+    header.append("CPC")
+    header.append("CPRICE")
+    header.append("MIUopt")
+    header.append("rr")
+    
+    header.append("L")
+    header.append("AL")
+    header.append("YGROSS")
+
+    header.append("K")
+    header.append("Sopt")
+    header.append("I")
+    header.append("YNET")
+
+    header.append("CCATOT")
+    header.append("DAMAGES")
+    header.append("ABATECOST")
+    header.append("MCABATE")
+    header.append("C")
+    header.append("PERIODU")
+    header.append("TOTPERIODU")
+    header.append("RFACTLONG")
+    header.append("RLONG")
+    header.append("RSHORT")
+    header.append("ELAND")
+
+    if 1 == 0:
+        num_cols = output.shape[0]
+        num_rows = len(header)
+
+        row = ["INDEX"]
+        for iCol in range(0, num_cols):
+            row.append(iCol+1)
+        writer.writerow(row)
+
+        for iRow in range(1, num_rows):
+            row = [header[iRow-1]]
+            for iCol in range(0, num_cols):
+                row.append(output[iCol, iRow-1])
+            writer.writerow(row)
+    else:
+        num_rows = output.shape[0]
+        num_cols = len(header)
+
+        row = ['IPERIOD']
+        for iCol in range(0, num_cols):
+            row.append(header[iCol])
+        writer.writerow(row)
+
+        for iRow in range(1, num_rows):
+            row = [iRow]
+            for iCol in range(1, num_cols):
+                row.append(output[iRow, iCol-1])
+            writer.writerow(row)
+
+    f.close()
+
+###############################################################################    
+
+def runModel(self):
         pass
-
 
 print("Success")

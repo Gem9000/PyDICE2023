@@ -29,7 +29,7 @@ class DiceParams():
         self._pop1    = 7752.9 #Initial world population 2020 (millions)
         self._popadj  = 0.145  #Growth rate to calibrate to 2050 pop projection
         self._popasym = 10825  #Asymptotic population (millions)
-        self._dk      = 0.100  #Deprecation on capital (per year)
+        self._dk      = 0.100  #Deprication on capital (per year)
         self._q1      = 135.7  #Initial world output 2020 (trillion 2019 USD)
         self._AL1     = 5.84   #Initial level of total factor productivity
         self._gA1     = 0.066  #Initial growth rate for TFP per 5 yrs 
@@ -45,7 +45,7 @@ class DiceParams():
         self._e1           = 37.56  #Industrial emissions 2020 (GtCO2 per year)   
         self._miu1         = 0.05   #Emissions control rate historical 2020 
         self._fosslim      = 6000   #Maximum cumulative extraction fossil fuels (GtC)
-        self._CumEmiss0    = 633.5  #CumEmiss0 Cumulative emissions 2020 (GtC) 
+        self._CumEmiss0    = 633.5  #CumEmiss0 Cumulative emissions 2020 (GtC)
         self._emissrat2020 = 1.40   #Ratio of CO2e to industrial CO2 2020
         self._emissrat2100 = 1.21   #Ratio of CO2e to industrial CO2 2020
 
@@ -53,19 +53,19 @@ class DiceParams():
         #Climate damage parameter
         ####################################################################
         
-        self._a1       = 0        #Damage intercept
-        self._a2base   = 0.003467 #Damage quadratic term rev. 01-13-23
-        self._init__a3 = 2.00     #Damage exponent
+        self._a1        = 0        #Damage intercept
+        self._a2base    = 0.003467 #Damage quadratic term rev 01-13-23
+        self._init__a3  = 2.00     #Damage exponent
 
         ####################################################################
         #Abatement cost
         ####################################################################
 
-        self._expcost2  = 2.6     #Exponent of control cost function                     
-        self._pback2050 = 515.0   #Cost of backstop 2019$ per tCO2 2050                   
-        self._gback     = -0.012  #Initial cost decline backstop cost per year           
-        self._cprice1   = 6       #Carbon price 2020 2019$ per tCO2                         
-        self._gcprice   = 0.025   #Growth rate of base carbon price per year              
+        self._expcost2  = 2.6    #Exponent of control cost function                     
+        self._pback2050 = 515.0  #Cost of backstop 2019$ per tCO2 2050                   
+        self._gback     = -0.012 #Initial cost decline backstop cost per year           
+        self._cprice1   = 6      #Carbon price 2020 2019$ per tCO2                         
+        self._gcprice   = 0.025  #Growth rate of base carbon price per year              
 
         ####################################################################
         #Limits on emissions controls
@@ -81,26 +81,27 @@ class DiceParams():
         #Preferences, growth uncertainty, and timing
         ####################################################################
     
-        self._betaclim = 0.5   #Climate beta                                      
-        self._elasmu   = 0.95  #Elasticity of marginal utility of consumption    
-        self._prstp    = 0.001 #Pure rate of social time preference               
-        self._pi       = 0.05  #Capital risk premium                              
-        self._rartp    = 0     #Risk-adjusted rate of time preference (SET TO ZERO FOR NOW)
-        self._k0       = 295   #Initial capital stock calibrated (1012 2019 USD)  
-        self._siggc1   = 0.01  #Annual standard deviation of consumption growth   
-        self._sig1     = 0     #Carbon intensity 2020 kgCO2-output 2020 (SET TO ZERO FOR NOW)
+        self._betaclim   = 0.5   #Climate beta
+        self._elasmu     = 0.95  #Elasticity of marginal utility of consumption
+        self._prstp      = 0.001 #Pure rate of social time preference
+        self._pi         = 0.05  #Capital risk premium
+        self._k0         = 295   #Initial capital stock calibrated (1012 2019 USD)
+        self._siggc1     = 0.01  #Annual standard deviation of consumption growth
+        self._rartp      = self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference
+        self._sig1       = (self._e1)/(self._q1*(1-self._miu1)) #Carbon intensity 2020 kgCO2-output 2020 - could not find value in gams code
 
-        #####################################################################
+        ####################################################################
         #Scaling so that MU(C(1)) = 1 and objective function = PV consumption
-        #####################################################################
-        self._tstep  = tstep      #Years in period 
-        self._SRF    = 1000000    #Scaling factor discounting
-        self._scale1 = 0.00891061 #Multiplicative scaling coefficient
-        self._scale2 = -6275.91   #Additive scaling coefficient
+        ####################################################################
+        self._tstep      = tstep      #Years in period 
+        self._SRF        = 1000000    #Scaling factor discounting
+        self._scale1     = 0.00891061 #Multiplicative scaling coefficient
+        self._scale2     = -6275.91   #Additive scaling coefficient
 
-        ##Emissions Limits########################
-        self._miu2 = 0.10 #Second emission limit 
-        ##########################################
+        ####################################################################
+        #Emissions Limits
+        ####################################################################
+        self._miu2       = 0.10  #Second emission limit
 
         ##################################################################
         #Functions
@@ -112,31 +113,30 @@ class DiceParams():
         self._t = np.arange(0,num_times+1)
 
         #Create size arrays so we can index from 1 instead of 0
-        self._rartp      = np.zeros(num_times+1)
-        self._l          = np.zeros(num_times+1)
-        self._al         = np.zeros(num_times+1)
-        self._sigma      = np.zeros(num_times+1)
-        self._sigmatot   = np.zeros(num_times+1)
-        self._gA         = np.zeros(num_times+1)
-        self._gL         = np.zeros(num_times+1)
-        self._gcost1     = np.zeros(num_times+1)
-        self._gsig       = np.zeros(num_times+1)
-        self._eland      = np.zeros(num_times+1)
-        self._emissrat   = np.zeros(num_times+1)
-        self._cost1tot   = np.zeros(num_times+1)
-        self._pbacktime  = np.zeros(num_times+1)
-        self._scc        = np.zeros(num_times+1)
+        self._l = np.zeros(num_times+1)
+        self._al = np.zeros(num_times+1)
+        self._sigma = np.zeros(num_times+1)
+        self._sigmatot = np.zeros(num_times+1)
+        self._gA = np.zeros(num_times+1)
+        self._gL = np.zeros(num_times+1)
+        self._gcost1 = np.zeros(num_times+1)
+        self._gsig = np.zeros(num_times+1)
+        self._eland = np.zeros(num_times+1)
+        self._emissrat = np.zeros(num_times+1) #Ratio of CO2e to industrial emissions
+        self._cost1tot = np.zeros(num_times+1)
+        self._pbacktime = np.zeros(num_times+1)
+        self._scc = np.zeros(num_times+1)
         self._cpricebase = np.zeros(num_times+1)
-        self._ppm        = np.zeros(num_times+1)
+        self._ppm = np.zeros(num_times+1)
         self._atfrac2020 = np.zeros(num_times+1)
         self._atfrac1765 = np.zeros(num_times+1)
-        self._abaterat   = np.zeros(num_times+1)
-        self._miuup      = np.zeros(num_times+1)
-        self._gbacktime  = np.zeros(num_times+1)
-        self._rr         = np.zeros(num_times+1) 
-        self._varpcc     = np.zeros(num_times+1)
-        self._rprecaut   = np.zeros(num_times+1)
-        self._RR1        = np.zeros(num_times+1)
+        self._abaterat = np.zeros(num_times+1)
+        self._miuup = np.zeros(num_times+1)
+        self._gbacktime = np.zeros(num_times+1)
+        self._rr = np.zerors(num_times+1) 
+        self._varpcc = np.zeros(num_times+1)
+        self._rprecaut = np.zeros(num_times+1)
+        self._RR1 = np.zeros(num_times+1)
 
         '''PARAMETERS
         L(t)           Level of population and labor
@@ -176,10 +176,6 @@ class DiceParams():
         self._rr[1]    = 1.0
         self._miuup[1] = self._miu1
         self._miuup[2] = self._miu2
-        self._rartp    = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adj. rate of time preference 
-        
-        #NEED TO ASK ABOUT THIS ONE
-        self._sig1 = (self._e1)/(self._q1*(1-self._miu1))
         self._sigma[1] = self._sig1
 
         for i in range(2, self._num_times+1):
@@ -193,7 +189,7 @@ class DiceParams():
             self._cpricebase[i]   = self._cprice1*(1+self._gcprice)**(5*(self._t[i]-1)) #Carbon price in base case of model
             self._pbacktime[i]    = self._pback2050 * math.exp(-5*(0.01 if self._t[i] <= 7 else 0.001)*(self._t[i]-7)) #Backstop price 2019$ per ton CO2. Incorporates 2023 condition
             self._gsig[i]         = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (rate of decarbonization)
-            self._sigma[i]        = self._sigma[i-1]*math.exp(5*self._gsig[i-1]) #CO2-emissions output ratio
+            self._sigma[i]        = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
             if self._t[i] <= 16:
                 self._emissrat[i] = self._emissrat2020 +((self._emissrat2100-self._emissrat2020)/16)*(self._t[i]-1)
             else:
@@ -203,7 +199,7 @@ class DiceParams():
 
         #Control logic for the emissions control rate
         for i in range(3, self._num_times+1):
-            if self._t[i] > 2:
+            if self._t[i]> 2:
                 self._miuup[i] = (self._delmiumax*(self._t[i]-1))
             if self._t[i] > 8:
                 self._miuup[i] = (0.85 + 0.05 * (self._t[i]-8))
@@ -216,9 +212,8 @@ class DiceParams():
             if self._t[i] > 57:
                 self._miuup[i] = self._limmiu2300
              
-        
         #Optimal long-run savings rate used for transversality*
-        self._optlrsav =(self._dk + 0.004)/(self._dk + 0.004*self._elasmu+ self._rartp)*self._gama
+        self._optlrsav = (self._dk + 0.004)/(self._dk + 0.004*self._elasmu+ self._rartp)*self._gama
 
         if 1==1:
 

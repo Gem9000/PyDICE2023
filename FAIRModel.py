@@ -161,7 +161,7 @@ class FAIRParams():
         self._F_GHGabate[1] = self._F_GHGabate2020
 
         ### GEORGE
-        #Set relevant values using the paramteters above
+        #Set relevant values using the parameters above
         # self._k[1] = self._k0
         # self._l[1] = self._pop1 #Population 
         # self._al[1] = self._AL1 #Initial total factor productivity
@@ -188,20 +188,20 @@ class FAIRParams():
         for i in range(2, self._num_times + 1):
 
             #Must be conputed since it's used in the eco2 equation
-            self._l[i] = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Level of population and labor 
-            self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
-            self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
+    #        self._l[i] = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Level of population and labor 
+    #        self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
+    #        self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])
 
             self._eland[i-1] = self._eland0 * (1 - self._deland) ** (self._t[i-1]-1)
 
             #Depends on the t-1 time period
             self._CCATOT[i] = self._CCATOT[i-1] + self._eco2[i-1] * (5/3.666)
-            self._ygross[i-1] = self._al[i-1] * ((self._l[i-1]/self._MILLE)**(1.0-self._gama)) * self._k[i-1]**self._gama  #Gross world product GROSS of abatement and damages (trillion 2019USD/yr)
+    #        self._ygross[i-1] = self._al[i-1] * ((self._l[i-1]/self._MILLE)**(1.0-self._gama)) * self._k[i-1]**self._gama  #Gross world product GROSS of abatement and damages (trillion 2019USD/yr)
 
-            self._eco2[i-1] = (self._sigma[i-1] * self._ygross[i-1] + self._eland[i-1]) * (1-self._MIUopt[i-1]) #New
-            self._eind[i-1] = self._sigma[i-1] * self._ygross[i-1] * (1.0 - self._MIUopt[i-1])
+    #        self._eco2[i-1] = (self._sigma[i-1] * self._ygross[i-1] + self._eland[i-1]) * (1-self._MIUopt[i-1]) #New
+    #        self._eind[i-1] = self._sigma[i-1] * self._ygross[i-1] * (1.0 - self._MIUopt[i-1])
             
-            self._eco2e[i-1] = (self._sigma[i-1] * self._ygross[i-1] + self._eland[i-1] + self._CO2E_GHGabateB[i-1]) * (1-self._MIUopt[i-1]) #New
+    #        self._eco2e[i-1] = (self._sigma[i-1] * self._ygross[i-1] + self._eland[i-1] + self._CO2E_GHGabateB[i-1]) * (1-self._MIUopt[i-1]) #New
 
             #Solve for alpha(t) in each time period 
             self._alpha_t[i] = self.solve_alpha(i-1)

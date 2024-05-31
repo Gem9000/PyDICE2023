@@ -1,3 +1,8 @@
+'''
+Author: George Moraites
+Edited by Jacob Wessel
+'''
+
 import csv
 import numpy as np
 from numba import njit
@@ -9,33 +14,23 @@ seaborn.set_theme(style='ticks')
 from FAIRModel import FAIRParams
 
 ###############################################################################
-# All arrays have been shifted to have length numtimes + 1 and to start at
-# 1
+# All arrays have been shifted to have length numtimes + 1 and to start at 1
 ###############################################################################
-# Due to my essential wish to use the same code for the optimiser and to get
-# the state info I have created two functions, one wrapped inside the other.
-# The optimiser call fOBJ which returns a float for the optimiser. However
-# internally this calls the simulateDynamics function which can return either
-# the single value (utility to be maximised) or the state information.
+# The optimizer calls objFn() which returns a float for the optimizer. However,
+# internally this calls simulateDynamics(), which can return either the utility
+# to be maximized or the state information.
 ###############################################################################
-
 
 @njit(cache=True, fastmath=True)
 def objFn(x, *args):
-    """ This is the pass-through function that returns a single float value of
-    the objective function for the benefit of the optimisation algorithm. """
-
+    """ Pass-through function returning a single float value of the objective function """
     out = simulateDynamics(x, *args)
     return out[0, 0]
 
 ###############################################################################
 
-###############################################################################
-# Set the optimisation variables
-###############################################################################
-   #    @njit(cache=True, fastmath=True)
 def simulateDynamics(self, SRF, x, sign, outputType, num_times,
-                         tstep, al, ll, sigma, forcoth,
+                         tstep, al, ll, sigma,
                          cost1, etree,
                          scale1, scale2,
                          ml0, mu0, mat0, cca0,
@@ -45,26 +40,26 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
                          fco22x, t2xco2, rr, gama,
                          tocean0, tatm0, elasmu, prstp, expcost2,
                          k0, dk, pbacktime, CumEmiss0):
-        """ This is the simulation of the DICE 2016 model dynamics. It is optimised
-        for speed. For this reason I have avoided the use of classes. """
+        """ Simulation of DICE 2023 model dynamics """
     
         LOG2 = np.log(2)
-        L = ll  # NORDHAUS RENAMES IT TO UPPER CASE IN EQUATIONS
-        MILLE = 1000.0  ######NEED TO LOOK AT THIS##############
+        L = ll  # renamed to uppercase in equations
+        MILLE = 1000 # conversion factor
     
-        # We take care to ensure that the indexing starts at 1 to allow comparison
-        # with matlab
+        # Ensure indexing starts at 1 to allow comparison with matlab
         MIUopt = np.zeros(num_times+1)
         Sopt = np.zeros(num_times+1)
     
-
+###############################################################################
+# Set the optimization variables
+###############################################################################
 
         for i in range(1, num_times+1):
             MIUopt[i] = x[i-1]          #Optimal emissions control rate GHGS
             Sopt[i] = x[num_times + i-1]   #Gross savings rate as fraction of gross world product
     
 ###########################################################################
-#Variabls and nonnegative variables equations
+#Variables and nonnegative variables equations
 ###########################################################################
         
         #Make an instance of the FAIR PARAMETERS class
@@ -83,7 +78,13 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
         MAT = instance._mmat                   #Atmospheric concentration equation
         CACC = instance._cacceq                #Accumulated carbon in sinks equation
         
-
+        ECO2 = instance._eco2                     #Total CO2 emissions (GtCO2 per year)
+        ECO2E = instance._eco2e                   #Total CO2e emissions including abateable nonCO2 GHG (GtCO2 per year)
+        EIND = instance._eind                     #Industrial Emissions (GtCO2 per year)
+        CO2E_GHGabateB = instance._CO2E_GHGabateB #Abateable non-CO2 GHG emissions base
+        F_GHGabate = instance._F_GHGabate         #Forcings abateable nonCO2 GHG
+        ELAND = instance._eland                   #Emissions from deforestation (GtCO2 per year)
+        
         C = np.zeros(num_times+1)              #Consumption (trillions 2019 US dollars per year)
         K = np.zeros(num_times+1)              #Capital stock (trillions 2019 US dollars)
         CPC = np.zeros(num_times+1)            #Per capita consumption (thousands 2019 USD per year)
@@ -101,18 +102,9 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
         TOTPERIODU = np.zeros(num_times+1)     #Period utility
         UTILITY    = np.zeros(num_times+1)     #Welfare function
         RFACTLONG = np.zeros(num_times+1)
-        RSHORT    = np.zeros(num_times+1)      #Real interest rate with precautionary(per annum year on year)
+        RSHORT    = np.zeros(num_times+1)      #Real interest rate with precautionary (per year on year)
         RLONG   = np.zeros(num_times+1)        #Real interest rate from year 0 to T
         EIND = np.zeros(num_times+1)           #Industrial Emissions (GtCO2 per year)
-        
-        #New
-        ECO2 = np.zeros(num_times+1)           
-        ECO2E = np.zeros(num_times+1)
-        CO2E_GHGabateB = np.zeros(num_times+1)
-        F_GHGabate = np.zeros(num_times+1)
-        #Emissions from deforestation
-
-
 
 #Emissions and Damages
         CCATOTEQ = np.zeros(num_times+1)       #Cumulative total carbon emissions
@@ -137,12 +129,10 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
         PERIODUEQ = np.zeros(num_times+1)      #Instantaneous utility function equation
         #UTILEQ =  np.zeros(num_times+1)        #Objective function
 
-#Fixed initial values(depricated in the 2023 version included for now)
-    #ML[1] = ml0
 
-###################################Initilizing Equations#################################
+###################################Initializing Equations#################################
+        K[1] = k0
         CCATOTEQ[1] = CumEmiss0
-        ##F_GHGabate[1] F_GHGabate2020     #Need to find this value
         
         YGROSS[1] = al[1] * ((L[1]/MILLE)**(1.0-gama)) * K[1]**gama  #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
 
@@ -152,14 +142,9 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
         ECO2E[1] = (sigma[1] * YGROSS[1] + etree[1] + CO2E_GHGabateB[1]) * (1-MIUopt) #New
         
         CCATOT[1] = CCATOT[1] + ECO2[1]*(5/3.666)
-        DAMFRAC = (a1 * TATM[1] + a2 * TATM[1] ** a3)  
-        DAMAGES = YGROSS[1] * DAMFRAC[1]
-        
-        ABATECOST = YGROSS[1] * cost1[1] * (MIUopt[1] ** expcost2) #NEEDS TO BE CHECKED
-        MCABATE = pbacktime[1] * MIUopt[1] ** (expcost2-1)
-        CPRICE = pbacktime[1] * (MIUopt[1]) **(expcost2-1)
+        DAMFRAC[1] = (a1 * TATM[1] + a2 * TATM[1] ** a3)  
+        DAMAGES[1] = YGROSS[1] * DAMFRAC[1]
 
-        #FORC[1] = fco22x * np.log(MAT[1]/588.000)/LOG2 + forcoth[1]
         DAMFRAC[1] = a1*TATM[1] + a2*TATM[1]**a3
         DAMAGES[1] = YGROSS[1] * DAMFRAC[1]
         ABATECOST[1] = YGROSS[1] * cost1[1] * MIUopt[1]**expcost2
@@ -167,53 +152,45 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
         CPRICE[1] = pbacktime[1] * (MIUopt[1])**(expcost2-1)
 
         CACC[1] = cca0  # DOES NOT START TILL PERIOD 2
-        t = 1           #Needed to define this just for one of the
-                        #functions that needed it
 
-        ########################Economic Initilizations##############
+        ########################Economic Initializations##############
         YNET[1] = YGROSS[1] * (1-DAMFRAC[1])
         Y[1] = YNET[1] - ABATECOST[1]
         C[1] = Y[1] - I[1]
         CPC[1] = MILLE * C[1]/L[1]
         I[1] = Sopt[1] * Y[1]
-        K[1] = k0
 
+        RFACTLONG[0] = 1000000
         RFACTLONG[1] = 1000000
-        RLONG[1] = (-math.log(RFACTLONG[1]/SRF)/(5*t)) #NEW
-        RSHORT[1] = (-math.log(RFACTLONG[1]/RFACTLONG[0])/(5)) #NEW 
+        RLONG[1] = (-math.log(RFACTLONG[1]/SRF)/5) #NEW
+        RSHORT[1] = (-math.log(RFACTLONG[1]/RFACTLONG[0])/5) #NEW 
 
         #########################Welfare Functions###################
         PERIODU[1] = ((C[1]*MILLE/L[1])**(1.0-elasmu)-1.0) / (1.0 - elasmu) - 1.0
         TOTPERIODU[1] = PERIODU[1] * L[1] * rr[1]
 
-
-        #Many of the equations in the module have been put into
-        #The separate DFAIR class. The equations that the DFAIR modules rely
-        #On should be calculated and then back checked 
+        #Many of the equations in the module have been put into a separate DFAIR class
+        # The equations that the DFAIR modules rely on should be calculated and back checked 
         for i in range(2, num_times+1):
 
             #Depends on the t-1 time period
             CCATOT[i] = CCATOT[i-1] + ECO2[i-1] * (5/3.666)
             YGROSS[i] = al[i] * ((L[i]/MILLE)**(1.0-gama)) * K[i]**gama  #Gross world product GROSS of abatement and damages (trillions 20i9 USD per year)
 
-            ECO2[i] = (sigma[i] * YGROSS[i] + etree[i]) * (1-MIUopt) #New
+            ECO2[i] = (sigma[i] * YGROSS[i] + ELAND[i]) * (1-MIUopt) #New
             EIND[i] = sigma[i] * YGROSS[i] * (1.0 - MIUopt[i])
             
-            ECO2E[i] = (sigma[i] * YGROSS[i] + etree[i] + CO2E_GHGabateB[i]) * (1-MIUopt) #New
+            ECO2E[i] = (sigma[i] * YGROSS[i] + ELAND[i] + CO2E_GHGabateB[i]) * (1-MIUopt) #New
             
             CCATOT[i] = CCATOT[i] + ECO2[i]*(5/3.666)
             DAMFRAC = (a1 * TATM[i] + a2 * TATM[i] ** a3)  
             DAMAGES = YGROSS[i] * DAMFRAC[i]
-            
-            ABATECOST = YGROSS[i] * cost1[i] * (MIUopt[i] ** expcost2) #NEEDS TO BE CHECKED
-            MCABATE = pbacktime[i] * MIUopt[i] ** (expcost2-1)
-            CPRICE = pbacktime[i] * (MIUopt[i]) **(expcost2-1)
 
             DAMFRAC[i] = a1*TATM[i] + a2*TATM[i]**a3
             DAMAGES[i] = YGROSS[i] * DAMFRAC[i]
             ABATECOST[i] = YGROSS[i] * cost1[i] * MIUopt[i]**expcost2
-            MCABATE[i] = pbacktime[i] * MIUopt[i]**(expcost2-i)
-            CPRICE[i] = pbacktime[i] * (MIUopt[i])**(expcost2-i)
+            MCABATE[i] = pbacktime[i] * MIUopt[i]**(expcost2-1)
+            CPRICE[i] = pbacktime[i] * (MIUopt[i])**(expcost2-1)
 
             ########################Economic##############################
             YNET[i] = YGROSS[i] * (i-DAMFRAC[i])
@@ -221,11 +198,13 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
             C[i] = Y[i] - I[i]
             CPC[i] = MILLE * C[i]/L[i]
             I[i] = Sopt[i] * Y[i]
-            K[i] = (1.0 -dk)**tstep * K[i-1] + tstep * I[i]
 
-            RFACTLONG[i] = (SRF * (CPC[i-1]/CPC[i])**(-elasmu)*rr[i-1]) #Modified/New
-            RLONG[i] = (-math.log(RFACTLONG[i-1]/SRF)/(5*t)) #NEW
-            RSHORT[i] = (-math.log(RFACTLONG[i-1]/RFACTLONG[i])/(5)) #NEW 
+            # this equation is a <= inequality and needs to be treated as such
+            K[i] = (1.0 - dk)**tstep * K[i-1] + tstep * I[i]
+
+            RFACTLONG[i] = (SRF * (CPC[i]/CPC[i-1])**(-elasmu)*rr[i]) #Modified/New
+            RLONG[i] = -math.log(RFACTLONG[i]/SRF)/(5*(i-1)) #NEW
+            RSHORT[i] = (-math.log(RFACTLONG[i]/RFACTLONG[i-1])/5) #NEW 
 
             #########################Welfare Functions###################
             PERIODU[i] = ((C[i]*MILLE/L[i])**(1.0-elasmu)-1.0) / (1.0 - elasmu) - 1.0
@@ -243,8 +222,7 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
 
         elif outputType == 1:
 
-            #Implemented in the originial DICE 2016 implementation
-            #However, might be depricated. Needs to be checked
+            #Implemented in DICE2016 but might be depricated. Needs checked
             """
                # EXTRA VALUES COMPUTED LATER
             CO2PPM = np.zeros(num_times+1)
@@ -280,14 +258,12 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
                 col += 1  # 8
                 output[jTime, col] = rr[iTime]
                 col += 1  # 9
-
                 output[jTime, col] = ll[iTime]
                 col += 1  # 10
                 output[jTime, col] = al[iTime]
                 col += 1  # 11
                 output[jTime, col] = YGROSS[iTime]
                 col += 1  # 12
-
                 output[jTime, col] = K[iTime]
                 col += 1  # 13
                 output[jTime, col] = Sopt[iTime]
@@ -296,7 +272,6 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
                 col += 1  # 15
                 output[jTime, col] = YNET[iTime]
                 col += 1  # 16
-
                 output[jTime, col] = CCATOT[iTime]
                 col += 1  # 17
                 output[jTime, col] = DAMAGES[iTime]
@@ -317,16 +292,13 @@ def simulateDynamics(self, SRF, x, sign, outputType, num_times,
                 col += 1  # 25
                 output[jTime, col] = RSHORT[iTime]
                 col += 1  # 26
-                output[jTime,col] = etree[iTime]
+                output[jTime,col] = ELAND[iTime]
                 col += 1 # 27
-
-
             return output
 
         else:
             raise Exception("Unknown output type.")
 
-    
         return output
     
 
@@ -348,7 +320,6 @@ def dumpState(years, output, filename):
     header.append("MIUopt")
     header.append("rr")
     
-
     header.append("L")
     header.append("AL")
     header.append("YGROSS")
@@ -368,7 +339,7 @@ def dumpState(years, output, filename):
     header.append("RFACTLONG")
     header.append("RLONG")
     header.append("RSHORT")
-    header.append("ETREE")
+    header.append("ELAND")
 
     if 1 == 0:
         num_cols = output.shape[0]
