@@ -1,5 +1,5 @@
 '''
-Authors: George Moraites, Jacob Wessel
+Authors: Jacob Wessel, George Moraites
 '''
 
 from pyomo.environ import *
@@ -8,51 +8,29 @@ from pyomo.opt import SolverFactory
 import numpy as np
 import time
 
-from params import DiceParams
+from DICE_params import modelParams
 from dice_dynamics import simulateDynamics, dumpState
 
 if __name__ == '__main__':
-    num_times = 81
-    tstep = 5.0
-
+    num_times = 82
+    tstep = 5
     t = np.arange(1, num_times+1)
 
-    p = DiceParams(num_times, tstep)
+    params = modelParams(num_times, tstep)
     outputType = 1
 
     start_year = 2020
-    final_year = start_year + p._tstep * num_times
+    final_year = start_year + tstep * num_times
     years = np.linspace(start_year, final_year, num_times+1, dtype=np.int32)
 
-    scc_index = 0
-    c_bump = 0.0
-    e_bump = 0.0
-    
-    '''
-    Fix the argsv in here. Original:
-        argsv = [-1.0, outputType, num_times,
-             p._tstep,
-             p._al, p._l, p._sigma, p._cumetree, p._forcoth,
-             p._cost1, p._etree, p._scale1, p._scale2,
-             p._ml0, p._mu0, p._mat0, p._cca0,
-             p._a1, p._a2, p._a3,
-             p._c1, p._c3, p._c4,
-             p._b11, p._b12, p._b21, p._b22, p._b32, p._b23, p._b33,
-             p._fco22x, p._t2xco2,
-             p._rr, p._gama,
-             p._tocean0, p._tatm0, p._elasmu, p._prstp, p._expcost2,
-             p._k0, p._dk, p._pbacktime,
-             scc_index, e_bump, c_bump]
-    '''
-# p._fco22x, p._tatm0 in FAIRmodel
-    argsv = [-1.0, outputType, num_times, p._tstep,
-             p._al, p._l, p._sigma,
-             p._cost1tot, p._eland, p._scale1, p._scale2,
-             p._a1, p._a2base, p._init__a3,
-             p._rr, p._gama,
-             p._elasmu, p._prstp, p._expcost2,
-             p._k0, p._dk, p._pbacktime,
-             scc_index, e_bump, c_bump]
+# params._fco22x, params._tatm0 in FAIRmodel
+    argsv = [-1.0, outputType, num_times, params._tstep,
+             params._al, params._l, params._sigma,
+             params._cost1tot, params._eland, params._scale1, params._scale2,
+             params._a1, params._a2base, params._a3,
+             params._rr, params._gama,
+             params._elasmu, params._prstp, params._expcost2,
+             params._k0, params._dk, params._pbacktime]
 
     args = tuple(argsv)
 
@@ -60,21 +38,56 @@ if __name__ == '__main__':
     # Pyomo Model Definition
     ###########################################################################
     model = ConcreteModel()
-
     model.t = RangeSet(1, num_times)
+
 
     # Variables
     model.S = Var(model.t, bounds=(0.1, 0.9))
     model.MIU = Var(model.t, bounds=(0.01, 1.0))
+
+
+
+
+
+
+    '''
+    * Various control rate limits, initial and terminal conditions
+    miu.up(t)       = miuup(t);
+    K.LO(t)         = 1;
+    C.LO(t)         = 2;
+    CPC.LO(t)       = .01;
+    RFACTLONG.lo(t) =.0001;
+    *set lag10(t) ;
+    *lag10(t)                =  yes$(t.val gt card(t)-10);
+    *S.FX(lag10(t))          = optlrsav;
+    s.fx(t)$(t.val > 37)    =.28;
+    ccatot.fx(tfirst)       = CumEmiss0;
+    K.FX(tfirst)            = k0;
+    F_GHGabate.fx(tfirst)   = F_GHGabate2020;
+    RFACTLONG.fx(tfirst)    = 1000000;
+    -> .fx used to "fix" variables at certain values.
+
+    **  Upper and lower bounds for stability
+    MAT.LO(t)       = 10;
+    TATM.UP(t)      = 20;
+    TATM.lo(t)      = .5;
+    alpha.up(t) = 100;
+    alpha.lo(t) = 0.1;
+    IRF equation (constrain to be zero at every time point)
+    '''
+
+
 
     # Objective Function
     def obj_rule(model):
         return simulateDynamics([value(model.MIU[t]) for t in model.t], *args)
     model.obj = Objective(rule=obj_rule)
 
+
+
     # Constraints
     def miu_constraint_rule(model, t):
-        return model.MIU[t] <= 1.0 if t == 1 else model.MIU[t] <= p._limmiu
+        return model.MIU[t] <= 1.0 if t == 1 else model.MIU[t] <= params._limmiu
     model.miu_constraint = Constraint(model.t, rule=miu_constraint_rule)
 
     def savings_constraint_rule(model, t):
@@ -83,6 +96,11 @@ if __name__ == '__main__':
 
     # def capital_stock_constraint(model,t):
     #     K[i] <= (1.0 - dk)**tstep * K[i-1] + tstep * I[i]
+
+
+
+
+
     
     '''PARAMETERS
     L(t)           Level of population and labor
@@ -142,41 +160,24 @@ if __name__ == '__main__':
     end = time.time()
     print("Time Elapsed:", end - start)
 
+
+
+
     ###########################################################################
     # Post-Processing
     ###########################################################################
-    outputType = 0
-    argsv[1] = outputType
-    args = tuple(argsv)
 
     print("Dumping graphs to file.")
     output = simulateDynamics([value(model.MIU[t]) for t in model.t], *args)
     dumpState(years, output, "./results/base_case_state_post_opt.csv")
 
+    # Put these below equations and dumpState in separate py file to call as functions
+    # ### Post-Solution Parameter-Assignment ###
+    # self._scc[i]        = -1000 * self._eco2[i] / (.00001 + self._C[i]) # NOTE: THESE (self._eco2[i] and self._C[i]) NEED TO BE MARGINAL VALUES, NOT THE SOLUTIONS THEMSELVES
+    # self._ppm[i]        = self._mat[i] / 2.13
+    # self._abaterat[i]   = self._abatecost[i] / self._Y[i]
+    # self._atfrac2020[i] = (self._mat[i] - self.params._mat0) / (self._ccatot[i] + .00001 - self.params._CumEmiss0)
+    # self._atfrac1765[i] = (self._mat[i] - self.params._mateq) / (.00001 + self._ccatot[i])
+    # self._FORC_CO2[i]   = self.params._fco22x * ((math.log((self._mat[i] / self.params._mateq)) / math.log(2)))
+
     print("Completed.")
-
-
-    '''
-* Various control rate limits, initial and terminal conditions
-miu.up(t)       = miuup(t);
-K.LO(t)         = 1;
-C.LO(t)         = 2;
-CPC.LO(t)       = .01;
-RFACTLONG.lo(t) =.0001;
-*set lag10(t) ;
-*lag10(t)                =  yes$(t.val gt card(t)-10);
-*S.FX(lag10(t))          = optlrsav;
-s.fx(t)$(t.val > 37)    =.28;
-ccatot.fx(tfirst)       = CumEmiss0;
-K.FX(tfirst)            = k0;
-F_GHGabate.fx(tfirst)   = F_GHGabate2020;
-RFACTLONG.fx(tfirst)    = 1000000;
-
-**  Upper and lower bounds for stability
-MAT.LO(t)       = 10;
-TATM.UP(t)      = 20;
-TATM.lo(t)      = .5;
-alpha.up(t) = 100;
-alpha.lo(t) = 0.1;
-
-    '''
