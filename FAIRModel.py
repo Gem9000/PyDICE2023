@@ -169,7 +169,7 @@ class FAIRParams():
         # self._sig1 = (self._e1)/(self._q1*(1-self._miu1))
         # self._sigma[1] = self._sig1 #sig1 did not have a value in the gms code
         # self._ygross[1] = self._al[1] * ((self._l[1]/self._MILLE)**(1.0-self._gama)) * self._k[1]**self._gama  #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
-        # self._eco2[1] = ((self._sigma[1] * self._ygross[1] + self._etree[1]) * (1-self._MIUopt[1])) #New
+        # self._eco2[1] = ((self._sigma[1] * self._ygross[1] + self._eland[1]) * (1-self._MIUopt[1])) #New
 
         #This code wasn't running for debugging,
         #But we don't need the optimal values right now to check 
@@ -187,7 +187,7 @@ class FAIRParams():
 
         for i in range(2, self._num_times + 1):
 
-            #Must be conputed since it's used in the eco2 equation
+            #Must be computed since it's used in the eco2 equation
     #        self._l[i] = self._l[i-1]*(self._popasym / self._l[i-1])**self._popadj # Level of population and labor 
     #        self._gsig[i] = min(self._gsigma1*self._delgsig **((self._t[i]-1)), self._asymgsig) #Change in rate of sigma (represents rate of decarbonization)
     #        self._sigma[i] = self._sigma[i-1]*math.exp(5*self._gsig[i-1])

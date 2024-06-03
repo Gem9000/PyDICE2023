@@ -35,8 +35,7 @@ def objFn(x, *args):
 class DiceParams():
 
     '''
-    This Class will hold the static runtime 
-    parameter imputs to the DICE model.
+    This Class will hold the static runtime parameter imputs to the DICE model.
     '''
 
     def __init__(self, num_times, tstep):
@@ -70,7 +69,7 @@ class DiceParams():
         self._fosslim      = 6000   #Maximum cumulative extraction fossil fuels (GtC)
         self._CumEmiss0    = 633.5  #CumEmiss0 Cumulative emissions 2020 (GtC)
         self._emissrat2020 = 1.40   #Ratio of CO2e to industrial CO2 2020
-        self._emissrat2100 = 1.21   #Ratio of CO2e to industrial CO2 2020
+        self._emissrat2100 = 1.21   #Ratio of CO2e to industrial CO2 2100
 
         ####################################################################
         #Climate damage parameter
@@ -110,7 +109,7 @@ class DiceParams():
         self._pi         = 0.05  #Capital risk premium
         self._k0         = 295   #Initial capital stock calibrated (1012 2019 USD)
         self._siggc1     = 0.01  #Annual standard deviation of consumption growth
-        self._rartp      = self._rartp = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference
+        self._rartp      = math.exp(self._prstp + self._betaclim * self._pi)-1 #Risk adjusted rate of time preference
         self._sig1       = (self._e1)/(self._q1*(1-self._miu1)) #Carbon intensity 2020 kgCO2-output 2020 - could not find value in gams code
 
         ####################################################################
@@ -156,7 +155,7 @@ class DiceParams():
         self._abaterat = np.zeros(num_times+1)
         self._miuup = np.zeros(num_times+1)
         self._gbacktime = np.zeros(num_times+1)
-        self._rr = np.zerors(num_times+1) 
+        self._rr = np.zeros(num_times+1) 
         self._varpcc = np.zeros(num_times+1)
         self._rprecaut = np.zeros(num_times+1)
         self._RR1 = np.zeros(num_times+1)
@@ -484,6 +483,14 @@ class DiceParams():
             PERIODU[i] = ((C[i]*MILLE/L[i])**(1.0-elasmu)-1.0) / (1.0 - elasmu) - 1.0
             TOTPERIODU[i] = PERIODU[i] * L[i] * rr[i]
 
+
+
+
+
+
+
+
+
         output = np.zeros((num_times,50))
         
         #Defining some control logic for the model
@@ -497,7 +504,7 @@ class DiceParams():
         elif outputType == 1:
 
             #Implemented in the original DICE 2016 implementation
-            #However, might be depricated. Needs to be checked
+            #However, might be deprecated. Needs to be checked
             """
                # EXTRA VALUES COMPUTED LATER
             CO2PPM = np.zeros(num_times+1)
