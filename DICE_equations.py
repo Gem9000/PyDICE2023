@@ -54,7 +54,6 @@ class modelEqns():
         self._irfeqlhs         = np.zeros(num_times+1)
         self._irfeqrhs         = np.zeros(num_times+1)
         self._alpha            = np.zeros(num_times+1)
-        self._calculated_mmat  = np.zeros(num_times+1)
 
         # variables from nonco2 forcings include
         self._eco2             = np.zeros(num_times+1) #Total CO2 emissions (GtCO2 per year)
@@ -83,7 +82,7 @@ class modelEqns():
         self._cprice     = np.zeros(num_times+1) #Carbon price (2019$ per ton of CO2)
         self._periodu    = np.zeros(num_times+1) #One period utility function
         self._totperiodu = np.zeros(num_times+1) #Period utility
-        self._utility    = np.zeros(num_times+1) #Welfare function
+        self._utility    = np.zeros(num_times+1) #Objective function
         self._rfactlong  = np.zeros(num_times+1) #Long interest factor
         self._rshort     = np.zeros(num_times+1) #Short-run interest rate: Real interest rate with precautionary(per annum year on year)
         self._rlong      = np.zeros(num_times+1) #Long-run interest rate: Real interest rate from year 0 to T
@@ -153,13 +152,13 @@ class modelEqns():
             self._rlong[i]        = -math.log(self._rfactlong[i]/self.params._SRF)/(5*(i-1)) #NEW
             self._rshort[i]       = (-math.log(self._rfactlong[i]/self._rfactlong[i-1])/5) #NEW 
 
-            #########################Welfare Functions###################
+            #########################Objective Functions###################
             self._periodu[i]      = ((self._C[i]*self.params._MILLE/self._L[i])**(1.0-self.params._elasmu)-1.0) / (1.0 - self.params._elasmu) - 1.0
             self._totperiodu[i]   = self._periodu[i] * self._L[i] * self._rr[i]
 
             self._varpcc[i]       = min(self.params._siggc1**2*5*(self.params._t[i]-1), self.params._siggc1**2*5*47) #Variance of per capita consumption
             self._rprecaut[i]     = -0.5 * self._varpcc[i-1]* self.params._elasmu**2 #Precautionary rate of return
-            self._rr1[i]          = 1/((1+math.exp(self.params._prstp + self.params._betaclim * self.params._pi)-1)**(-self.params._tstep*(self.params._t[i]-1))) #STP factor without precautionary factor
+            self._rr1[i]          = 1/((1+math.exp(self.params._prstp + self.params._betaclim * self.params._pi)-1)**(self.params._tstep*(self.params._t[i]-1))) #STP factor without precautionary factor
             self._rr[i]           = self._rr1[i]*(1+ self._rprecaut[i]**(-self.params._tstep*(self.params._t[i]-1)))  #STP factor with precautionary factor
             self._L[i]            = self._L[i-1]*(self.params._popasym / self._L[i-1])**self.params._popadj # Population adjustment over time
             self._gA[i]           = self.params._gA1 * np.exp(-self.params._delA * 5.0 * (self.params._t[i] - 1)) # Growth rate of productivity
@@ -202,11 +201,7 @@ class modelEqns():
                                     (1 - math.exp(-self.params._tstep / (self.params._tau3 * self._alpha[i]))) + 
                                     self._res3[i-1] * math.exp(-self.params._tstep / (self.params._tau3 * self._alpha[i])))
 
-            self._calculated_mmat[i] = self.params._mateq + self._res0[i] + self._res1[i] + self._res2[i] + self._res3[i]
-            if self._calculated_mmat[i] < 10:
-                self._mat[i] = 10
-            else:
-                self._mat[i] = self._calculated_mmat[i]
+            self._mat[i] = self.params._mateq + self._res0[i] + self._res1[i] + self._res2[i] + self._res3[i]
 
             if self.params._t[i-1] <= 16:
                 self._CO2E_GHGabateB[i-1] = self.params._ECO2eGHGB2020 + ((self.params._ECO2eGHGB2100-self.params._ECO2eGHGB2020)/16)*(self.params._t[i-1]-1)
