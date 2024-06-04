@@ -109,14 +109,25 @@ class modelParams():
         self._gback        = -0.012 #Initial cost decline backstop cost per year ##
 
         ####################################################################
-        #Limits on emissions controls
+        #Limits on emissions controls, and other boundaries
         ####################################################################
 
-        self._limmiu2070 = 1.0   #Emission control limit from 2070
-        self._limmiu2120 = 1.1   #Emission control limit from 2120
-        self._limmiu2200 = 1.05  #Emission control limit from 2220
-        self._limmiu2300 = 1.0   #Emission control limit from 2300
-        self._delmiumax  = 0.12  #Emission control delta limit per period
+        self._limmiu2070  = 1.0     #Emission control limit from 2070
+        self._limmiu2120  = 1.1     #Emission control limit from 2120
+        self._limmiu2200  = 1.05    #Emission control limit from 2220
+        self._limmiu2300  = 1.0     #Emission control limit from 2300
+        self._delmiumax   = 0.12    #Emission control delta limit per period
+        self._klo         = 1       #Lower limit on K for all t
+        self._clo         = 2       #Lower limit on C for all t
+        self._cpclo       = 0.01    #Lower limit on CPC for all t
+        self._rfactlong1  = 1000000 #Initial RFACTLONG at tfirst
+        self._rfactlonglo = 0.0001  #Lower limit on RFACTLONG for all t
+        self._alphalo     = 0.1     #Lower limit on alpha for all t
+        self._alphaup     = 100     #Upper limit on alpha for all t
+        self._matlo       = 10      #Lower limit on MAT for all t
+        self._tatmlo      = 0.5     #Lower limit on TATM for all t
+        self._tatmup      = 20      #Upper limit on TATM for all t
+        self._sfx2200     = 0.28    #Fixed Gross savings rate after 2200
 
         ####################################################################
         #Preferences, growth uncertainty, and timing
@@ -137,7 +148,7 @@ class modelParams():
         self._scale1     = 0.00891061 #Multiplicative scaling coefficient
         self._scale2     = -6275.91   #Additive scaling coefficient
         self._MILLE      = 1000.0
-
+        
     def runModel(self):
         pass    
 
