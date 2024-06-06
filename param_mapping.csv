@@ -1,0 +1,92 @@
+﻿param,defaultval,coverage,module,type,unit,desc
+region,global,na,modelsetup,modelsetup,None,Name of region (string)
+tstep,5,gl,modelsetup,modelsetup,yr,Number of years in each period (only tested for 5)
+numtimes,82,gl,modelsetup,modelsetup,None,Number of time periods (only tested for 82 which includes unused zero index for comparability ease)
+yr0,2020,gl,modelsetup,modelsetup,None,Calendar year corresponding to year 0
+emshare0,0.2173,gl,climate,parameter,None,Carbon emissions share into reservoir 0
+emshare1,0.224,gl,climate,parameter,None,Carbon emissions share into reservoir 1
+emshare2,0.2824,gl,climate,parameter,None,Carbon emissions share into reservoir 2
+emshare3,0.2763,gl,climate,parameter,None,Carbon emissions share into reservoir 3
+tau0,1000000,gl,climate,parameter,yr,Decay time constant for reservoir 0
+tau1,394.4,gl,climate,parameter,yr,Decay time constant for reservoir 1
+tau2,36.53,gl,climate,parameter,yr,Decay time constant for reservoir 2
+tau3,4.304,gl,climate,parameter,yr,Decay time constant for reservoir 3
+teq1,0.324,gl,climate,parameter,m^2/kW,Thermal equilibration parameter for box 1
+teq2,0.44,gl,climate,parameter,m^2/kW,Thermal equilibration parameter for box 2
+d1,236,gl,climate,parameter,yr,Thermal response timescale for deep ocean
+d2,4.07,gl,climate,parameter,yr,Thermal response timescale for upper ocean
+irf0,32.4,gl,climate,initialcondition,yr,Pre-industrial IRF100
+irC,0.019,gl,climate,parameter,yr/GtC,Increase in IRF100 with cumulative carbon uptake
+irT,4.165,gl,climate,parameter,yr/degree K,Increase in IRF100 with warming
+fco22x,3.93,gl,climate,parameter,W/m^2,Forcings of equilibrium CO2 doubling
+mat0,886.5128014,gl,climate,initialcondition,GtC,Initial concentration in atmosphere in 2020
+res00,150.093,gl,climate,initialcondition,GtC,Initial concentration in Reservoir 0 in 2020
+res10,102.698,gl,climate,initialcondition,GtC,Initial concentration in Reservoir 1 in 2020
+res20,39.534,gl,climate,initialcondition,GtC,Initial concentration in Reservoir 2 in 2020
+res30,6.1865,gl,climate,initialcondition,GtC,Initial concentration in Reservoir 3 in 2020
+mateq,588,gl,climate,parameter,GtC,Equilibrium concentration atmosphere
+tbox10,0.1477,gl,climate,initialcondition,degree C,Initial temperature box 1 change in 2020
+tbox20,1.099454,gl,climate,initialcondition,degree C,Initial temperature box 2 change in 2020
+tatm0,1.24715,gl,climate,initialcondition,degree C,Initial atmospheric temperature change in 2020
+eland0,5.9,reg,emissions,initialcondition,GtCO2/yr,Carbon emissions from land 2015
+deland,0.1,reg,emissions,parameter,period^-1,Decline rate of land emissions
+F_Misc2020,-0.054,gl,climate,initialcondition,W/m^2,Non-abatable forcings 2020
+F_Misc2100,0.265,gl,climate,intermediatecondition,W/m^2,Non-abatable forcings 2100
+F_GHGabate2020,0.518,gl,climate,initialcondition,W/m^2,Forcings of abatable nonCO2 GHG
+F_GHGabate2100,0.957,gl,climate,intermediatecondition,W/m^2,Forcings of abatable nonCO2 GHG
+ECO2eGHGB2020,9.96,reg,emissions,initialcondition,GtCO2e,Emis of abatable nonCO2 GHG 2020
+ECO2eGHGB2100,15.5,reg,emissions,intermediatecondition,GtCO2e,Emis of abatable nonCO2 GHG 2100
+Fcoef1,0.00955,reg,emissions,parameter,None,Coefficient of nonco2 abateable emissions
+Fcoef2,0.861,reg,emissions,parameter,None,Coefficient of nonco2 abateable emissions
+gama,0.3,reg,economy,parameter,None,Capital elasticity in production func.
+pop1,7752.9,reg,economy,initialcondition,millions,Initial population 2020
+popadj,0.145,reg,economy,parameter,period^-1,Growth rate to calibrate to 2050 pop projection
+popasym,10825,reg,economy,parameter,millions,Asymptotic population
+dk,0.1,reg,economy,parameter,yr^-1,Deprication on capital
+q1,135.7,reg,economy,initialcondition,trillion 2019USD,Initial output 2020
+AL1,5.84,reg,economy,initialcondition,None,Initial level of total factor productivity
+gA1,0.066,reg,economy,initialcondition,period^-1,Initial growth rate for TFP
+delA,0.0015,reg,economy,parameter,period^-1,Decline rate of TFP
+gsigma1,-0.015,reg,economy,initialcondition,yr^-1,Initial growth of sigma (CO2-emissions output ratio)
+delgsig,0.96,reg,economy,parameter,period^-1,Decline rate of gsigma
+asymgsig,-0.005,reg,economy,parameter,period^-1,Asympototic gsigma
+e1,37.56,reg,emissions,initialcondition,GtCO2/yr,Industrial emissions 2020
+miu1,0.05,reg,emissions,initialcondition,None,Emissions control rate historical 2020
+miu2,0.1,reg,emissions,parameter,None,Second emission limit
+fosslim,6000,reg,emissions,bounds,GtC,Maximum cumulative extraction fossil fuels
+CumEmiss0,633.5,reg,emissions,initialcondition,GtC,Cumulative emissions 2020
+emissrat2020,1.4,reg,emissions,initialcondition,None,Ratio of CO2e to industrial CO2 2020
+emissrat2100,1.21,reg,emissions,intermediatecondition,None,Ratio of CO2e to industrial CO2 2100
+a1,0,reg,economy,parameter,None,Damage intercept
+a2base,0.003467,reg,economy,parameter,None,Damage quadratic term rev 01-13-23
+a3,2,reg,economy,parameter,None,Damage exponent
+expcost2,2.6,reg,economy,parameter,None,Exponent of control cost function
+pback2050,515,reg,economy,parameter,2019$/tCO2 2050,Cost of backstop
+cprice1,6,reg,economy,initialcondition,2019$/tCO2,Carbon price 2020
+gcprice,0.025,reg,economy,parameter,yr^-1,Growth rate of base carbon price per year
+gback,-0.012,reg,economy,parameter,yr^-1,Initial cost decline backstop cost per year
+limmiu2070,1,reg,emissions,bounds,None,Emission control limit from 2070
+limmiu2120,1.1,reg,emissions,bounds,None,Emission control limit from 2120
+limmiu2200,1.05,reg,emissions,bounds,None,Emission control limit from 2220
+limmiu2300,1,reg,emissions,bounds,None,Emission control limit from 2300
+delmiumax,0.12,reg,emissions,bounds,None,Emission control delta limit per period
+klo,1,reg,economy,bounds,trillion 2019USD,Lower limit on capital stock for all t
+clo,2,reg,economy,bounds,trillion 2019USD/yr,Lower limit on consumption for all t
+cpclo,0.01,reg,economy,bounds,thous 2019USD/yr,Lower limit on per capita consumption for all t
+rfactlong1,1000000,gl,economy,initialcondition,None,Initial long interest
+rfactlonglo,0.0001,gl,economy,bounds,None,Lower limit on RFACTLONG for all t
+alphalo,0.1,gl,climate,bounds,None,Lower limit on alpha for all t
+alphaup,100,gl,climate,bounds,None,Upper limit on alpha for all t
+matlo,10,gl,climate,bounds,GtC from 1765,Lower limit on C conc increase in atmosphere for all t
+tatmlo,0.5,gl,climate,bounds,degree C from 1765,Lower limit on increase temp of atmosphere for all t
+tatmup,20,gl,climate,bounds,degree C from 1765,Upper limit on increase temp of atmosphere for all t
+sfx2200,0.28,reg,economy,intermediatecondition,None,Fixed Gross savings rate after 2200
+betaclim,0.5,reg,climate,parameter,None,Climate beta
+elasmu,0.95,reg,economy,parameter,None,Elasticity of marginal utility of consumption
+prstp,0.001,reg,economy,parameter,None,Pure rate of social time preference
+pi,0.05,reg,economy,parameter,None,Capital risk premium
+k0,295,reg,economy,initialcondition,2019 USD,Initial capital stock calibrated (1012)
+siggc1,0.01,reg,economy,parameter,None,Annual standard deviation of consumption growth
+SRF,1000000,reg,economy,parameter,None,Scaling factor discounting
+scale1,0.00891061,reg,economy,parameter,None,Multiplicative scaling coefficient
+scale2,-6275.91,reg,economy,parameter,None,Additive scaling coefficient

@@ -3,21 +3,86 @@ Authors: Jacob Wessel, George Moraites
 '''
 
 import numpy as np
+import pandas as pd
+import os
 
-class modelParams():
+class getParams(): # writes a .dat file with the second column of parameters in the specified input file (assuming first column is param names)
+    
+    def __init__(self, input_file = 'param_inputs.csv'):
+        
+        self._csv_data = pd.read_csv(input_file, header=None,index_col=0)
+        self._datapath = 'temp_data/'
+        os.makedirs(self._datapath, exist_ok=True)
+        self._outfile = self._datapath + 'data.dat'
+        
+        with open(self._outfile, 'w') as f:
+            # create parameter matrix for global params
+            for c in self._csv_data.iloc[1:,:].iterrows():
+                f.write('param {} := {};\n'.format(c[0],c[1].values[0]))
+            f.close()
+        
+        return None
+    
+    def removeTempData(self):
+        os.remove(self._outfile)
+        return None
 
-    def __init__(self, num_times=82, tstep=5):
+class getParamsRegional():
+    
+    def __init__(self, input_file = 'param_inputs.csv', scenario = 'unnamed_scenario'):
+        
+        csv_data = pd.read_csv(input_file, header=None,index_col=0)
+        param_mapping = pd.read_csv('param_mapping.csv', index_col=0)
+        datapath = 'temp_data/'
+        os.makedirs(datapath, exist_ok=True)
+        outfile = datapath + scenario + '.dat'
+        
+        with open(outfile, 'w') as f:
+
+            f.write('set Regions := ')
+            regions = csv_data.loc['region',:].astype(str).tolist()
+            for r in regions:
+                f.write(r + ' ')
+            f.write(';\n\n')
+
+            csv_data_div = csv_data.merge(param_mapping[['coverage']], left_index=True, right_index=True)
+
+            # create parameter matrix for global params
+            for c in csv_data_div[csv_data_div.coverage=='gl'].iterrows():
+                f.write('param {} := {};\n'.format(c[0],c[1].values[0]))
+            f.write('\n')
+            
+            f.write('param:' + '\t')
+            # create parameter matrix for (potentially) regional params
+            for c in csv_data_div[csv_data_div.coverage=='reg'].iterrows():
+                f.write(c[0] + '\t')
+            f.write(':=\n\n')
+            for r in range(len(regions)):
+                f.write(regions[r] + '\t')
+                for c in csv_data_div[csv_data_div.coverage=='reg'].iterrows():
+                    f.write(c[1].values[r] + '\t')
+            f.write(' ;\n\n')
+            
+            f.close()
+
+
+class defaultParams():
+
+    def __init__(self):
 
     #########################################################
     #Initial Parameters for DICE with DFAIR
     #########################################################
-
+        
+        self._region    = 'global'
+        
         # Num times should be 82, time increment should be 5 years
-        self._tstep     = tstep         #Years in period
-        self._num_times = num_times
-        self._t         = np.arange(0,self._num_times+1)
-
+        self._tstep     = 5         #Years in period
+        self._numtimes  = 82
         self._yr0       = 2020          #Calendar year that corresponds to model year zero ##
+        self._finalyr   = self._yr0 + self._tstep * self._numtimes
+        self._t         = np.arange(0,self._numtimes+1)
+
         self._emshare0  = 0.2173        #Carbon emissions share into Reservoir 0
         self._emshare1  = 0.224         #Carbon emissions share into Reservoir 1
         self._emshare2  = 0.2824        #Carbon emissions share into Reservoir 2
@@ -147,14 +212,4 @@ class modelParams():
         self._SRF        = 1000000    #Scaling factor discounting
         self._scale1     = 0.00891061 #Multiplicative scaling coefficient
         self._scale2     = -6275.91   #Additive scaling coefficient
-        self._MILLE      = 1000.0
-        
-    def runModel(self):
-        pass    
-
-print("Success")
-
-fair_params = modelParams()
-
-fair_params.runModel()
 

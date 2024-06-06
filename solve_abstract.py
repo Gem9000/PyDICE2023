@@ -2,15 +2,14 @@
 Authors: Jacob Wessel, George Moraites
 '''
 
-from pyomo.environ import Var, ConcreteModel, RangeSet, Objective, value, Reals, NonNegativeReals, Constraint, maximize, summation, exp, log
+from pyomo.environ import Var, Param, AbstractModel, RangeSet, Objective, value, Reals, NonNegativeReals, Constraint, maximize, summation, exp, log, PositiveIntegers
 from pyomo.environ import *
 from pyomo.opt import SolverFactory
 
 import numpy as np
 import time
 
-from DICE_params import defaultParams
-#from dice_dynamics import simulateDynamics, dumpState
+from DICE_params import getParams
 
 
 
@@ -18,31 +17,125 @@ if __name__ == '__main__':
     
     solver_name = 'gurobi'   # enter name of solver here
     
-    p = defaultParams()        # get model paramaeters
-    
     outputType = 1
-
-    years = np.linspace(p._yr0, p._finalyr, p._numtimes+1, dtype=np.int32)
 
     c_to_co2 = 11/3          # conversion factor from carbon to equivalent CO2
 
 
-    # argsv = [-1.0, outputType, p._numtimes, p._tstep,
-    #          p._al, p._l, p._sigma,
-    #          p._cost1tot, p._eland, p._scale1, p._scale2,
-    #          p._a1, p._a2base, p._a3,
-    #          p._rr, p._gama,
-    #          p._elasmu, p._prstp, p._expcost2,
-    #          p._k0, p._dk, p._pbacktime]
+    # argsv = [-1.0, outputType, m.numtimes, m.tstep,
+    #          m.al, m.l, m.sigma,
+    #          m.cost1tot, m.eland, m.scale1, m.scale2,
+    #          m.a1, m.a2base, m.a3,
+    #          m.rr, m.gama,
+    #          m.elasmu, m.prstp, m.expcost2,
+    #          m.k0, m.dk, m.pbacktime]
     # args = tuple(argsv)
 
 
     ###########################################################################
     # Pyomo Model Definition
     ###########################################################################
+    
+    opt = SolverFactory(solver_name)
+    m = AbstractModel()
+    
+    m.numtimes = Param(within=PositiveIntegers)
+    m.time_periods = RangeSet(1, m.numtimes+1)
+    
+    ###########################################################################
+    # Parameter declarations (populated from data file)
+    ###########################################################################
 
-    m = ConcreteModel()
-    m.time_periods = RangeSet(1, p._numtimes+1)
+    m.tstep = Param(within = PositiveIntegers)
+    m.yr0 = Param(within = PositiveIntegers)
+    m.emshare0 = Param(within = NonNegativeReals)
+    m.emshare1 = Param(within = NonNegativeReals)
+    m.emshare2 = Param(within = NonNegativeReals)
+    m.emshare3 = Param(within = NonNegativeReals)
+    m.tau0 = Param(within = NonNegativeReals)
+    m.tau1 = Param(within = NonNegativeReals)
+    m.tau2 = Param(within = NonNegativeReals)
+    m.tau3 = Param(within = NonNegativeReals)
+    m.teq1 = Param(within = NonNegativeReals)
+    m.teq2 = Param(within = NonNegativeReals)
+    m.d1 = Param(within = Reals)
+    m.d2 = Param(within = Reals)
+    m.irf0 = Param(within = Reals)
+    m.irC = Param(within = Reals)
+    m.irT = Param(within = Reals)
+    m.fco22x = Param(within = Reals)
+    m.mat0 = Param(within = Reals)
+    m.res00 = Param(within = NonNegativeReals)
+    m.res10 = Param(within = NonNegativeReals)
+    m.res20 = Param(within = NonNegativeReals)
+    m.res30 = Param(within = NonNegativeReals)
+    m.mateq = Param(within = NonNegativeReals)
+    m.tbox10 = Param(within = Reals)
+    m.tbox20 = Param(within = Reals)
+    m.tatm0 = Param(within = Reals)
+    m.eland0 = Param(within = Reals)
+    m.deland = Param(within = Reals)
+    m.F_Misc2020 = Param(within = Reals)
+    m.F_Misc2100 = Param(within = Reals)
+    m.F_GHGabate2020 = Param(within = Reals)
+    m.F_GHGabate2100 = Param(within = Reals)
+    m.ECO2eGHGB2020 = Param(within = Reals)
+    m.ECO2eGHGB2100 = Param(within = Reals)
+    m.Fcoef1 = Param(within = Reals)
+    m.Fcoef2 = Param(within = Reals)
+    m.gama = Param(within = Reals)
+    m.pop1 = Param(within = NonNegativeReals)
+    m.popadj = Param(within = Reals)
+    m.popasym = Param(within = NonNegativeReals)
+    m.dk = Param(within = Reals)
+    m.q1 = Param(within = Reals)
+    m.AL1 = Param(within = Reals)
+    m.gA1 = Param(within = Reals)
+    m.delA = Param(within = Reals)
+    m.gsigma1 = Param(within = Reals)
+    m.delgsig = Param(within = Reals)
+    m.asymgsig = Param(within = Reals)
+    m.e1 = Param(within = Reals)
+    m.miu1 = Param(within = Reals)
+    m.miu2 = Param(within = Reals)
+    m.fosslim = Param(within = NonNegativeReals)
+    m.CumEmiss0 = Param(within = Reals)
+    m.emissrat2020 = Param(within = Reals)
+    m.emissrat2100 = Param(within = Reals)
+    m.a1 = Param(within = Reals)
+    m.a2base = Param(within = Reals)
+    m.a3 = Param(within = Reals)
+    m.expcost2 = Param(within = Reals)
+    m.pback2050 = Param(within = Reals)
+    m.cprice1 = Param(within = Reals)
+    m.gcprice = Param(within = Reals)
+    m.gback = Param(within = Reals)
+    m.limmiu2070 = Param(within = Reals)
+    m.limmiu2120 = Param(within = Reals)
+    m.limmiu2200 = Param(within = Reals)
+    m.limmiu2300 = Param(within = Reals)
+    m.delmiumax = Param(within = Reals)
+    m.klo = Param(within = NonNegativeReals)
+    m.clo = Param(within = NonNegativeReals)
+    m.cpclo = Param(within = Reals)
+    m.rfactlong1 = Param(within = Reals)
+    m.rfactlonglo = Param(within = Reals)
+    m.alphalo = Param(within = Reals)
+    m.alphaup = Param(within = Reals)
+    m.matlo = Param(within = Reals)
+    m.tatmlo = Param(within = Reals)
+    m.tatmup = Param(within = Reals)
+    m.sfx2200 = Param(within = Reals)
+    m.betaclim = Param(within = Reals)
+    m.elasmu = Param(within = Reals)
+    m.prstp = Param(within = Reals)
+    m.pi = Param(within = Reals)
+    m.k0 = Param(within = Reals)
+    m.siggc1 = Param(within = Reals)
+    m.SRF = Param(within = Reals)
+    m.scale1 = Param(within = Reals)
+    m.scale2 = Param(within = Reals)
+
 
 
 
@@ -52,89 +145,89 @@ if __name__ == '__main__':
     
     def MIUBounds(m,t):
         if t == 1:
-            return (0, p._miu1) # initial value
+            return (0, m.miu1) # initial value
         elif t == 2:
-            return (0, p._miu2) # 2nd initial value
+            return (0, m.miu2) # 2nd initial value
         elif (t > 2) & (t <= 8):
-            return (0, p._delmiumax * (t - 1))
+            return (0, m.delmiumax * (t - 1))
         elif (t > 8) & (t <= 11):
             return (0, 0.85 + 0.05 * (t - 8))
         elif (t > 11)&(t<=20):
-            return (0, p._limmiu2070)
+            return (0, m.limmiu2070)
         elif (t > 20) & (t <= 37):
-            return (0, p._limmiu2120)
+            return (0, m.limmiu2120)
         elif (t > 37) & (t <= 57):
-            return (0, p._limmiu2200)
+            return (0, m.limmiu2200)
         elif t > 57:
-            return (0, p._limmiu2300)
+            return (0, m.limmiu2300)
 
     def SBounds(m,t): # lag 10
-        if (t <= 37) & (t <= p._numtimes - 10):
+        if (t <= 37) & (t <= m.numtimes - 10):
             return (-np.inf,np.inf)
-        elif (t > 37) & (t <= p._numtimes - 10):
-            return (p._sfx2200, p._sfx2200) # 2nd initial value
-        elif t > p._numtimes - 10:
-            optlrsav = (p._dk + .004) / (p._dk + .004 * p._elasmu +
-                       exp(p._prstp + p._betaclim * p._pi) - 1) * p._gama
+        elif (t > 37) & (t <= m.numtimes - 10):
+            return (m.sfx2200, m.sfx2200) # 2nd initial value
+        elif t > m.numtimes - 10:
+            optlrsav = (m.dk + .004) / (m.dk + .004 * m.elasmu +
+                       exp(m.prstp + m.betaclim * m.pi) - 1) * m.gama
             return (optlrsav, optlrsav)
 
     def KBounds(m,t):
-        return (p._k0, p._k0) if t==1 else (p._klo, np.inf)
+        return (m.k0, m.k0) if t==1 else (m.klo, np.inf)
 
     def LBounds(m,t):
-        return (p._pop1, p._pop1) if t==1 else (0, np.inf)
+        return (m.pop1, m.pop1) if t==1 else (0, np.inf)
 
     def gABounds(m,t):
-        return (p._gA1, p._gA1) if t==1 else (0, np.inf)
+        return (m.gA1, m.gA1) if t==1 else (0, np.inf)
 
     def aLBounds(m,t):
-        return (p._AL1, p._AL1) if t==1 else (0, np.inf)
+        return (m.AL1, m.AL1) if t==1 else (0, np.inf)
 
     def gsigBounds(m,t):
-        return (p._gsigma1, p._gsigma1) if t==1 else (-np.inf, np.inf)
+        return (m.gsigma1, m.gsigma1) if t==1 else (-np.inf, np.inf)
 
     def sigmaBounds(m,t):
-        sig1 = p._e1 / (p._q1 * (1 - p._miu1))
+        sig1 = m.e1 / (m.q1 * (1 - m.miu1))
         return (sig1, sig1) if t==1 else (0, np.inf)
 
     def CCATOTBounds(m,t):
-        return (p._CumEmiss0, p._CumEmiss0) if t==1 else (-np.inf, np.inf)
+        return (m.CumEmiss0, m.CumEmiss0) if t==1 else (-np.inf, np.inf)
 
     def MATBounds(m,t):
-        return (p._mat0, p._mat0) if t==1 else (p._matlo, np.inf)
+        return (m.mat0, m.mat0) if t==1 else (m.matlo, np.inf)
 
     def TATMBounds(m,t):
-        return (p._tatm0, p._tatm0) if t==1 else (p._tatmlo, p._tatmup)
+        return (m.tatm0, m.tatm0) if t==1 else (m.tatmlo, m.tatmup)
 
     def RES0Bounds(m,t):
-        return (p._res00, p._res00) if t==1 else (-np.inf, np.inf)
+        return (m.res00, m.res00) if t==1 else (-np.inf, np.inf)
 
     def RES1Bounds(m,t):
-        return (p._res10, p._res00) if t==1 else (-np.inf, np.inf)
+        return (m.res10, m.res00) if t==1 else (-np.inf, np.inf)
 
     def RES2Bounds(m,t):
-        return (p._res20, p._res00) if t==1 else (-np.inf, np.inf)
+        return (m.res20, m.res00) if t==1 else (-np.inf, np.inf)
 
     def RES3Bounds(m,t):
-        return (p._res30, p._res00) if t==1 else (-np.inf, np.inf)
+        return (m.res30, m.res00) if t==1 else (-np.inf, np.inf)
 
     def TBOX1Bounds(m,t):
-        return (p._tbox10, p._tbox10) if t==1 else (-np.inf, np.inf)
+        return (m.tbox10, m.tbox10) if t==1 else (-np.inf, np.inf)
 
     def TBOX2Bounds(m,t):
-        return (p._tbox20, p._tbox20) if t==1 else (-np.inf, np.inf)
+        return (m.tbox20, m.tbox20) if t==1 else (-np.inf, np.inf)
 
     def elandBounds(m,t):
-        return (p._eland0, p._eland0) if t==1 else (-np.inf, np.inf)
+        return (m.eland0, m.eland0) if t==1 else (-np.inf, np.inf)
 
     def F_GHGabateBounds(m,t):
-        return (p._F_GHGabate2020, p._F_GHGabate2020) if t==1 else (-np.inf, np.inf)
+        return (m.F_GHGabate2020, m.F_GHGabate2020) if t==1 else (-np.inf, np.inf)
 
     def RFACTLONGBounds(m,t):
-        return (p._rfactlong1, p._rfactlong1) if t==1 else (p._rfactlonglo, np.inf)
+        return (m.rfactlong1, m.rfactlong1) if t==1 else (m.rfactlonglo, np.inf)
 
     def alphaBounds(m,t):
-        return (p._rfactlong1, p._rfactlong1) if t==1 else (p._rfactlonglo, np.inf)
+        return (m.rfactlong1, m.rfactlong1) if t==1 else (m.rfactlonglo, np.inf)
 
 
 
@@ -186,9 +279,9 @@ if __name__ == '__main__':
     
     m.UTILITY    = Var(domain=Reals)                                                            #utility function to maximize in objective
     m.MIU        = Var(m.time_periods, domain=NonNegativeReals, bounds=MIUBounds)               #emission control rate
-    m.C          = Var(m.time_periods, domain=NonNegativeReals, bounds=(p._clo,np.inf))         #consumption (trillions 2019 US dollars per year)
+    m.C          = Var(m.time_periods, domain=NonNegativeReals, bounds=(m.clo,np.inf))         #consumption (trillions 2019 US dollars per year)
     m.K          = Var(m.time_periods, domain=NonNegativeReals, bounds=KBounds)                 #capital stock (trillions 2019 US dollars)
-    m.CPC        = Var(m.time_periods, domain=NonNegativeReals, bounds=(p._cpclo,np.inf))       #per capita consumption
+    m.CPC        = Var(m.time_periods, domain=NonNegativeReals, bounds=(m.cpclo,np.inf))       #per capita consumption
     m.I          = Var(m.time_periods, domain=NonNegativeReals)                                 #Investment (trillions 2019 USD per year)
     m.S          = Var(m.time_periods, domain=Reals, bounds=SBounds)                            #gross savings rate as fraction of gross world product
     m.Y          = Var(m.time_periods, domain=NonNegativeReals)                                 #Gross world product net of abatement and damages (trillions 2019 USD per year)
@@ -222,7 +315,7 @@ if __name__ == '__main__':
     m.ECO2E      = Var(m.time_periods, domain=Reals)                                            #Total CO2e emissions including abateable nonCO2 GHG (GtCO2 per year)
     m.EIND       = Var(m.time_periods, domain=Reals)                                            #Industrial CO2 emissions (GtCO2 per yr)
     m.F_GHGabate = Var(m.time_periods, domain=Reals, bounds=F_GHGabateBounds)                   #Forcings of abatable nonCO2 GHG
-    m.alpha      = Var(m.time_periods, domain=NonNegativeReals, bounds=(p._alphalo,p._alphaup)) #Carbon decay time scaling factor
+    m.alpha      = Var(m.time_periods, domain=NonNegativeReals, bounds=(m.alphalo,m.alphaup)) #Carbon decay time scaling factor
     
 
 
@@ -236,28 +329,28 @@ if __name__ == '__main__':
     ## Parameters
     
     def varpccEQ(m,t): # Variance of per capita consumption
-        return m.varpcc[t] == min(p._siggc1**2*5*(t-1), p._siggc1**2*5*47)
+        return m.varpcc[t] == min(m.siggc1**2*5*(t-1), m.siggc1**2*5*47)
     m._varpccEQ = Constraint(m.time_periods, rule=varpccEQ)
     
     def rprecautEQ(m,t): # Precautionary rate of return
-        return m.rprecaut[t] == -0.5 * m.varpcc[t] * p._elasmu**2
+        return m.rprecaut[t] == -0.5 * m.varpcc[t] * m.elasmu**2
     m._rprecautEQ = Constraint(m.time_periods, rule=rprecautEQ)
     
     def rr1EQ(m,t): # STP factor without precautionary factor
-        rartp = exp(p._prstp + p._betaclim * p._pi)-1
-        return m.rr1[t] == 1/((1 + rartp)**(p._tstep * (t-1)))
+        rartp = exp(m.prstp + m.betaclim * m.pi)-1
+        return m.rr1[t] == 1/((1 + rartp)**(m.tstep * (t-1)))
     m._rr1EQ = Constraint(m.time_periods, rule=rr1EQ)
     
     def rrEQ(m,t): # STP factor with precautionary factor
-        return m.rr[t] == m.rr1[t] * (1 + m.rprecaut[t]**(-p._tstep * (t-1)))
+        return m.rr[t] == m.rr1[t] * (1 + m.rprecaut[t]**(-m.tstep * (t-1)))
     m._rrEQ = Constraint(m.time_periods, rule=rrEQ)
     
     def LEQ(m,t): # Population adjustment over time (note initial condition)
-        return m.L[t] == m.L[t-1]*(p._popasym / m.L[t-1])**p._popadj if t > 1 else Constraint.Skip
+        return m.L[t] == m.L[t-1]*(m.popasym / m.L[t-1])**m.popadj if t > 1 else Constraint.Skip
     m._LEQ = Constraint(m.time_periods, rule=LEQ)
     
     def gAEQ(m,t): # Growth rate of productivity (note initial condition - can either enforce through bounds or this constraint)
-        return m.gA[t] == p._gA1 * exp(-p._delA * p._tstep * (t-1)) if t > 1 else Constraint.Skip
+        return m.gA[t] == m.gA1 * exp(-m.delA * m.tstep * (t-1)) if t > 1 else Constraint.Skip
     m._gAEQ = Constraint(m.time_periods, rule=gAEQ)
     
     def aLEQ(m,t): # Level of total factor productivity (note initial condition)
@@ -265,20 +358,20 @@ if __name__ == '__main__':
     m._aLEQ = Constraint(m.time_periods, rule=aLEQ)
 
     def cpricebaseEQ(m,t): # Carbon price in base case of model
-        return m.cpricebase[t] == p._cprice1 * (1 + p._gcprice)**(p._tstep * (t-1))
+        return m.cpricebase[t] == m.cprice1 * (1 + m.gcprice)**(m.tstep * (t-1))
     m._cpricebaseEQ = Constraint(m.time_periods, rule=cpricebaseEQ)
     
     def pbacktimeEQ(m,t): # Backstop price 2019$ per ton CO2
         j = 0.01 if t <= 7 else 0.001
-        return m.pbacktime[t] == p._pback2050 * exp(-p._tstep * j * (t-7))
+        return m.pbacktime[t] == m.pback2050 * exp(-m.tstep * j * (t-7))
     m._pbacktimeEQ = Constraint(m.time_periods, rule=pbacktimeEQ)
     
     def gsigEQ(m,t): # Change in rate of sigma (rate of decarbonization)
-        return m.gsig[t] == min(p._gsigma1 * p._delgsig**(t-1), p._asymgsig)
+        return m.gsig[t] == min(m.gsigma1 * m.delgsig**(t-1), m.asymgsig)
     m._gsigEQ = Constraint(m.time_periods, rule=gsigEQ)
     
     def sigmaEQ(m,t): # CO2 emissions output ratio (note initial condition)
-        return m.sigma[t] == m.sigma[t-1] * exp(p._tstep * m.gsig[t-1]) if t > 1 else Constraint.Skip
+        return m.sigma[t] == m.sigma[t-1] * exp(m.tstep * m.gsig[t-1]) if t > 1 else Constraint.Skip
     m._sigmaEQ = Constraint(m.time_periods, rule=sigmaEQ)
     
     
@@ -300,15 +393,15 @@ if __name__ == '__main__':
     m._ECO2EEQ = Constraint(m.time_periods, rule=ECO2EEQ)
     
     def F_GHGabateEQ(m,t): # note initial condition
-        return m.F_GHGabate[t] == p._Fcoef2 * m.F_GHGabate[t-1] + p._Fcoef1 * m.CO2E_GHGabateB[t-1] * (1-m.MIU[t-1]) if t > 1 else Constraint.Skip
+        return m.F_GHGabate[t] == m.Fcoef2 * m.F_GHGabate[t-1] + m.Fcoef1 * m.CO2E_GHGabateB[t-1] * (1-m.MIU[t-1]) if t > 1 else Constraint.Skip
     m._F_GHGabateEQ = Constraint(m.time_periods, rule=F_GHGabateEQ)
     
     def CCATOTEQ(m,t): # note initial condition
-        return m.CCATOT[t] == m.CCATOT[t-1] + m.ECO2[t-1] * (p._tstep / c_to_co2) if t > 1 else Constraint.Skip
+        return m.CCATOT[t] == m.CCATOT[t-1] + m.ECO2[t-1] * (m.tstep / c_to_co2) if t > 1 else Constraint.Skip
     m._CCATOTEQ = Constraint(m.time_periods, rule=CCATOTEQ)
     
     def DAMFRACEQ(m,t):
-        return m.DAMFRAC[t] == (p._a1 * m.TATM[t]) + (p._a2base * m.TATM[t] ** p._a3)
+        return m.DAMFRAC[t] == (m.a1 * m.TATM[t]) + (m.a2base * m.TATM[t] ** m.a3)
     m._DAMFRACEQ = Constraint(m.time_periods, rule=DAMFRACEQ)
     
     def DAMAGESEQ(m,t):
@@ -316,15 +409,15 @@ if __name__ == '__main__':
     m._DAMAGESEQ = Constraint(m.time_periods, rule=DAMAGESEQ)
     
     def ABATECOSTEQ(m,t):
-        return m.ABATECOST[t] == m.YGROSS[t] * m.cost1tot[t] * m.MIU[t]**p._expcost2
+        return m.ABATECOST[t] == m.YGROSS[t] * m.cost1tot[t] * m.MIU[t]**m.expcost2
     m._ABATECOSTEQ = Constraint(m.time_periods, rule=ABATECOSTEQ)
     
     def MCABATEEQ(m,t):
-        return m.MCABATE[t] == m.pbacktime[t] * m.MIU[t]**(p._expcost2 - 1)
+        return m.MCABATE[t] == m.pbacktime[t] * m.MIU[t]**(m.expcost2 - 1)
     m._MCABATEEQ = Constraint(m.time_periods, rule=MCABATEEQ)
     
     def CPRICEEQ(m,t):
-        return m.CPRICE[t] == m.pbacktime[t] * (m.MIU[t])**(p._expcost2 - 1)
+        return m.CPRICE[t] == m.pbacktime[t] * (m.MIU[t])**(m.expcost2 - 1)
     m._CPRICEEQ = Constraint(m.time_periods, rule=CPRICEEQ)
 
 
@@ -332,7 +425,7 @@ if __name__ == '__main__':
     # Economic Variables
     
     def YGROSSEQ(m,t): # Gross world product GROSS of abatement and damages (trillions 20i9 USD per year)
-        return m.YGROSS[t] == (m.aL[t] * (m.L[t] / 1000)**(1 - p._gama)) * (m.K[t]**p._gama)
+        return m.YGROSS[t] == (m.aL[t] * (m.L[t] / 1000)**(1 - m.gama)) * (m.K[t]**m.gama)
     m._YGROSSEQ = Constraint(m.time_periods, rule=YGROSSEQ)
     
     def YNETEQ(m,t):
@@ -356,19 +449,19 @@ if __name__ == '__main__':
     m._IEQ = Constraint(m.time_periods, rule=IEQ)
     
     def KEQ(m,t): # note initial condition
-        return m.K[t] == (1 - p._dk)**p._tstep * m.K[t-1] + p._tstep * m.I[t-1] if t > 1 else Constraint.Skip
+        return m.K[t] == (1 - m.dk)**m.tstep * m.K[t-1] + m.tstep * m.I[t-1] if t > 1 else Constraint.Skip
     m._KEQ = Constraint(m.time_periods, rule=KEQ)
     
     def RFACTLONGEQ(m,t): # note initial condition
-        return m.RFACTLONG[t] == p._SRF * (m.CPC[t] / m.CPC[1])**(-p._elasmu)*m.rr[t] if t > 1 else Constraint.Skip #NEW
+        return m.RFACTLONG[t] == m.SRF * (m.CPC[t] / m.CPC[1])**(-m.elasmu)*m.rr[t] if t > 1 else Constraint.Skip #NEW
     m._RFACTLONGEQ = Constraint(m.time_periods, rule=RFACTLONGEQ)
     
     def RLONGEQ(m,t): # note initial condition
-        return m.RLONG[t] == -log(m.RFACTLONG[t] / p._SRF) / (p._tstep * (t-1)) if t > 1 else Constraint.Skip #NEW
+        return m.RLONG[t] == -log(m.RFACTLONG[t] / m.SRF) / (m.tstep * (t-1)) if t > 1 else Constraint.Skip #NEW
     m._RLONGEQ = Constraint(m.time_periods, rule=RLONGEQ)
     
     def RSHORTEQ(m,t): # note initial condition
-        return m.RSHORT[t] == -log(m.RFACTLONG[t] / m.RFACTLONG[t-1]) / p._tstep if t > 1 else Constraint.Skip #NEW
+        return m.RSHORT[t] == -log(m.RFACTLONG[t] / m.RFACTLONG[t-1]) / m.tstep if t > 1 else Constraint.Skip #NEW
     m._RSHORTEQ = Constraint(m.time_periods, rule=RSHORTEQ)
 
 
@@ -376,43 +469,43 @@ if __name__ == '__main__':
     ## FAIR Climate Module Equations
     
     def RES0LOM(m,t): # note initial condition
-        return m.RES0[t] == (p._emshare0 * p._tau0 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-p._tstep / (p._tau0 * m.alpha[t]))) + 
-                                m.RES0[t-1] * exp(-p._tstep / (p._tau0 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
+        return m.RES0[t] == (m.emshare0 * m.tau0 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-m.tstep / (m.tau0 * m.alpha[t]))) + 
+                                m.RES0[t-1] * exp(-m.tstep / (m.tau0 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
     m._RES0LOM = Constraint(m.time_periods, rule=RES0LOM)
     
     def RES1LOM(m,t): # note initial condition
-        return m.RES1[t] == (p._emshare1 * p._tau1 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-p._tstep / (p._tau1 * m.alpha[t]))) + 
-                                m.RES1[t-1] * exp(-p._tstep / (p._tau1 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
+        return m.RES1[t] == (m.emshare1 * m.tau1 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-m.tstep / (m.tau1 * m.alpha[t]))) + 
+                                m.RES1[t-1] * exp(-m.tstep / (m.tau1 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
     m._RES1LOM = Constraint(m.time_periods, rule=RES1LOM)
     
     def RES2LOM(m,t): # note initial condition
-        return m.RES2[t] == (p._emshare2 * p._tau2 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-p._tstep / (p._tau2 * m.alpha[t]))) + 
-                                m.RES2[t-1] * exp(-p._tstep / (p._tau2 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
+        return m.RES2[t] == (m.emshare2 * m.tau2 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-m.tstep / (m.tau2 * m.alpha[t]))) + 
+                                m.RES2[t-1] * exp(-m.tstep / (m.tau2 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
     m._RES2LOM = Constraint(m.time_periods, rule=RES2LOM)
     
     def RES3LOM(m,t): # note initial condition
-        return m.RES3[t] == (p._emshare3 * p._tau3 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-p._tstep / (p._tau3 * m.alpha[t]))) + 
-                                m.RES3[t-1] * exp(-p._tstep / (p._tau3 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
+        return m.RES3[t] == (m.emshare3 * m.tau3 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-m.tstep / (m.tau3 * m.alpha[t]))) + 
+                                m.RES3[t-1] * exp(-m.tstep / (m.tau3 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
     m._RES3LOM = Constraint(m.time_periods, rule=RES3LOM)
     
     def MATEQ(m,t): # note initial condition
-        return m.MAT[t] == p._mateq + m.RES0[t] + m.RES1[t] + m.RES2[t] + m.RES3[t] if t > 1 else Constraint.Skip #NEW
+        return m.MAT[t] == m.mateq + m.RES0[t] + m.RES1[t] + m.RES2[t] + m.RES3[t] if t > 1 else Constraint.Skip #NEW
     m._MATEQ = Constraint(m.time_periods, rule=MATEQ)
     
     def CACCEQ(m,t):
-        return m.CACC[t] == (m.CCATOT[t] - (m.MAT[t] - p._mateq))
+        return m.CACC[t] == (m.CCATOT[t] - (m.MAT[t] - m.mateq))
     m._CACCEQ = Constraint(m.time_periods, rule=CACCEQ)
     
     def FORCEQ(m,t):
-        return m.FORC[t] == p._fco22x * log(m.MAT[t] / p._mateq) / log(2) + m.F_Misc[t] + m.F_GHGabate[t]
+        return m.FORC[t] == m.fco22x * log(m.MAT[t] / m.mateq) / log(2) + m.F_Misc[t] + m.F_GHGabate[t]
     m._FORCEQ = Constraint(m.time_periods, rule=FORCEQ)
     
     def TBOX1EQ(m,t): # note initial condition
-        return m.TBOX1[t] == (m.TBOX1[t-1] * exp(-p._tstep / p._d1)) + (p._teq1 * m.FORC[t] * (1 - exp(-p._tstep/  p._d1))) if t > 1 else Constraint.Skip #NEW
+        return m.TBOX1[t] == (m.TBOX1[t-1] * exp(-m.tstep / m.d1)) + (m.teq1 * m.FORC[t] * (1 - exp(-m.tstep/  m.d1))) if t > 1 else Constraint.Skip #NEW
     m._TBOX1EQ = Constraint(m.time_periods, rule=TBOX1EQ)
     
     def TBOX2EQ(m,t): # note initial condition
-        return m.TBOX2[t] == (m.TBOX2[t-1] * exp(-p._tstep / p._d2)) + (p._teq2 * m.FORC[t] * (1 - exp(-p._tstep / p._d2))) if t > 1 else Constraint.Skip #NEW
+        return m.TBOX2[t] == (m.TBOX2[t-1] * exp(-m.tstep / m.d2)) + (m.teq2 * m.FORC[t] * (1 - exp(-m.tstep / m.d2))) if t > 1 else Constraint.Skip #NEW
     m._TBOX2EQ = Constraint(m.time_periods, rule=TBOX2EQ)
     
     def TATMEQ(m,t): # note initial condition
@@ -420,14 +513,14 @@ if __name__ == '__main__':
     m._TATMEQ = Constraint(m.time_periods, rule=TATMEQ)
     
     def irfeqlhs(m,t):
-        return m.IRFt[t] == ((m.alpha[t] * p._emshare0 * p._tau0 * (1 - exp(-100 / (m.alpha[t] * p._tau0)))) +
-                             (m.alpha[t] * p._emshare1 * p._tau1 * (1 - exp(-100 / (m.alpha[t] * p._tau1)))) +
-                             (m.alpha[t] * p._emshare2 * p._tau2 * (1 - exp(-100 / (m.alpha[t] * p._tau2)))) +
-                             (m.alpha[t] * p._emshare3 * p._tau3 * (1 - exp(-100 / (m.alpha[t] * p._tau3))))) #NEW
+        return m.IRFt[t] == ((m.alpha[t] * m.emshare0 * m.tau0 * (1 - exp(-100 / (m.alpha[t] * m.tau0)))) +
+                             (m.alpha[t] * m.emshare1 * m.tau1 * (1 - exp(-100 / (m.alpha[t] * m.tau1)))) +
+                             (m.alpha[t] * m.emshare2 * m.tau2 * (1 - exp(-100 / (m.alpha[t] * m.tau2)))) +
+                             (m.alpha[t] * m.emshare3 * m.tau3 * (1 - exp(-100 / (m.alpha[t] * m.tau3))))) #NEW
     m._irfeqlhs = Constraint(m.time_periods, rule=irfeqlhs)
     
     def irfeqrhs(m,t):
-        return m.IRFt[t] == p._irf0 + (p._irC * m.CACC[t]) + (p._irT * m.TATM[t]) #NEW
+        return m.IRFt[t] == m.irf0 + (m.irC * m.CACC[t]) + (m.irT * m.TATM[t]) #NEW
     m._irfeqrhs = Constraint(m.time_periods, rule=irfeqrhs)
 
 
@@ -435,19 +528,19 @@ if __name__ == '__main__':
     ## NonCO2 Forcings Equations
     
     def elandEQ(m,t):
-        return m.eland[t] == p._eland0 * (1 - p._deland)**(t-1)
+        return m.eland[t] == m.eland0 * (1 - m.deland)**(t-1)
     m._elandEQ = Constraint(m.time_periods, rule=elandEQ)
     
     def CO2E_GHGabateBEQ(m,t):
-        return m.CO2E_GHGabateB[t] == p._ECO2eGHGB2020 + ((p._ECO2eGHGB2100 - p._ECO2eGHGB2020) / 16) * (t-1) if t <= 16 else m.CO2E_GHGabateB[t] == p._ECO2eGHGB2100
+        return m.CO2E_GHGabateB[t] == m.ECO2eGHGB2020 + ((m.ECO2eGHGB2100 - m.ECO2eGHGB2020) / 16) * (t-1) if t <= 16 else m.CO2E_GHGabateB[t] == m.ECO2eGHGB2100
     m._CO2E_GHGabateBEQ = Constraint(m.time_periods, rule=CO2E_GHGabateBEQ)
     
     def F_MiscEQ(m,t):
-        return m.F_Misc[t] == p._F_Misc2020 + ((p._F_Misc2100 - p._F_Misc2020) / 16) * (t-1) if t <= 16 else m.F_Misc[t] == p._F_Misc2100
+        return m.F_Misc[t] == m.F_Misc2020 + ((m.F_Misc2100 - m.F_Misc2020) / 16) * (t-1) if t <= 16 else m.F_Misc[t] == m.F_Misc2100
     m._F_MiscEQ = Constraint(m.time_periods, rule=F_MiscEQ)
     
     def emissratEQ(m,t):
-        return m.emissrat[t] == p._emissrat2020 + ((p._emissrat2100 - p._emissrat2020) / 16) * (t-1) if t <= 16 else m.emissrat[t] == p._emissrat2100
+        return m.emissrat[t] == m.emissrat2020 + ((m.emissrat2100 - m.emissrat2020) / 16) * (t-1) if t <= 16 else m.emissrat[t] == m.emissrat2100
     m._emissratEQ = Constraint(m.time_periods, rule=emissratEQ)
     
     def sigmatotEQ(m,t):
@@ -455,7 +548,7 @@ if __name__ == '__main__':
     m._sigmatotEQ = Constraint(m.time_periods, rule=sigmatotEQ)
     
     def cost1totEQ(m,t):
-        return m.cost1tot[t] == m.pbacktime[t] * m.sigmatot[t] / p._expcost2 / 1000
+        return m.cost1tot[t] == m.pbacktime[t] * m.sigmatot[t] / m.expcost2 / 1000
     m._cost1totEQ = Constraint(m.time_periods, rule=cost1totEQ)
     
 
@@ -467,7 +560,7 @@ if __name__ == '__main__':
     ###########################################################################
     
     def PERIODUEQ(m,t):
-        return m.PERIODU[t] == ((m.C[t] * 1000 / m.L[t])**(1 - p._elasmu) - 1) / (1 - p._elasmu) - 1
+        return m.PERIODU[t] == ((m.C[t] * 1000 / m.L[t])**(1 - m.elasmu) - 1) / (1 - m.elasmu) - 1
     m._PERIODUEQ = Constraint(m.time_periods, rule=PERIODUEQ)
     
     def TOTPERIODUEQ(m,t):
@@ -475,7 +568,7 @@ if __name__ == '__main__':
     m._TOTPERIODUEQ = Constraint(m.time_periods, rule=TOTPERIODUEQ)
     
     def UTILITYEQ(m):
-        return m.UTILITY == p._tstep * p._scale1 * summation(m.TOTPERIODU) + p._scale2
+        return m.UTILITY == m.tstep * m.scale1 * summation(m.TOTPERIODU) + m.scale2
     m._UTILITYEQ = Constraint(rule=UTILITYEQ)
     
     ###########################################################################
@@ -492,11 +585,14 @@ if __name__ == '__main__':
     # Optimization
     ###########################################################################
     
-    opt = SolverFactory(solver_name)
+
 
     start = time.time()
     
-    results = opt.solve(m, tee=True)
+    m1 = m.create_instance('temp_data/data.dat')
+    
+    result = opt.solve(m1,tee=True)#,symbolic_solver_labels=True)
+    #m1.solutions.load_from(result)
     
     end = time.time()
     
@@ -510,9 +606,9 @@ if __name__ == '__main__':
     # Post-Processing
     ###########################################################################
 
-    print("Dumping graphs to file.")
-    output = simulateDynamics([value(m.MIU[t]) for t in m.time_periods], *args) #fix
-    dumpState(years, output, "./results/base_case_state_post_opt.csv") #fix
+    #print("Dumping graphs to file.")
+    #output = simulateDynamics([value(m.MIU[t]) for t in m.time_periods], *args) #fix
+    #dumpState(years, output, "./results/base_case_state_post_opt.csv") #fix
 
     # fix
     # Put these below equations and dumpState in separate py file to call as functions
@@ -520,8 +616,8 @@ if __name__ == '__main__':
     # m.scc[t]        = -1000 * m.ECO2[t] / (.00001 + m.C[t]) # NOTE: THESE (m.eco2[t] and m.C[t]) NEED TO BE MARGINAL VALUES, NOT THE SOLUTIONS THEMSELVES
     # m.ppm[t]        = m.MAT[t] / 2.13
     # m.abaterat[t]   = m.ABATECOST[t] / m.Y[t]
-    # m.atfrac2020[t] = (m.MAT[t] - p._mat0) / (m.CCATOT[t] + .00001 - p._CumEmiss0)
-    # m.atfrac1765[t] = (m.MAT[t] - p._mateq) / (.00001 + m.CCATOT[t])
-    # m.FORC_CO2[t]   = p._fco22x * ((log((m.MAT[t] / p._mateq)) / log(2)))
+    # m.atfrac2020[t] = (m.MAT[t] - m.mat0) / (m.CCATOT[t] + .00001 - m.CumEmiss0)
+    # m.atfrac1765[t] = (m.MAT[t] - m.mateq) / (.00001 + m.CCATOT[t])
+    # m.FORC_CO2[t]   = m.fco22x * ((log((m.MAT[t] / m.mateq)) / log(2)))
 
-    print("Completed.")
+    #print("Completed.")
