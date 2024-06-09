@@ -1,6 +1,6 @@
 ﻿region,global
 tstep,5
-numtimes,82
+numtimes,81
 yr0,2020
 emshare0,0.2173
 emshare1,0.224
@@ -33,8 +33,9 @@ F_Misc2020,-0.054
 F_Misc2100,0.265
 F_GHGabate2020,0.518
 F_GHGabate2100,0.957
-ECO2eGHGB2020,9.96
-ECO2eGHGB2100,15.5
+nonco2frac,0.65
+ECO2eGHGB2020act,15.32307692
+ECO2eGHGB2100act,23.84615385
 Fcoef1,0.00955
 Fcoef2,0.861
 gama,0.3
@@ -62,6 +63,7 @@ a3,2
 expcost2,2.6
 pback2050,515
 cprice1,6
+cpriceup,1000
 gcprice,0.025
 gback,-0.012
 limmiu2070,1

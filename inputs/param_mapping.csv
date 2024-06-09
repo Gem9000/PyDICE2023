@@ -34,8 +34,9 @@ F_Misc2020,-0.054,gl,climate,initialcondition,W/m^2,Non-abatable forcings 2020
 F_Misc2100,0.265,gl,climate,intermediatecondition,W/m^2,Non-abatable forcings 2100
 F_GHGabate2020,0.518,gl,climate,initialcondition,W/m^2,Forcings of abatable nonCO2 GHG
 F_GHGabate2100,0.957,gl,climate,intermediatecondition,W/m^2,Forcings of abatable nonCO2 GHG
-ECO2eGHGB2020,9.96,reg,emissions,initialcondition,GtCO2e,Emis of abatable nonCO2 GHG 2020
-ECO2eGHGB2100,15.5,reg,emissions,intermediatecondition,GtCO2e,Emis of abatable nonCO2 GHG 2100
+nonco2frac,0.65,reg,emissions,parameter,None,Abateable share of non-CO2 GHG
+ECO2eGHGB2020act,15.32307692,reg,emissions,initialcondition,GtCO2e,Emis of nonCO2 GHG 2020 before applying nonco2frac
+ECO2eGHGB2100act,23.84615385,reg,emissions,intermediatecondition,GtCO2e,Emis of nonCO2 GHG 2100 before applying nonco2frac
 Fcoef1,0.00955,reg,emissions,parameter,None,Coefficient of nonco2 abateable emissions
 Fcoef2,0.861,reg,emissions,parameter,None,Coefficient of nonco2 abateable emissions
 gama,0.3,reg,economy,parameter,None,Capital elasticity in production func.
@@ -63,6 +64,7 @@ a3,2,reg,economy,parameter,None,Damage exponent
 expcost2,2.6,reg,economy,parameter,None,Exponent of control cost function
 pback2050,515,reg,economy,parameter,2019$/tCO2 2050,Cost of backstop
 cprice1,6,reg,economy,initialcondition,2019$/tCO2,Carbon price 2020
+cpriceup,1000,reg,economy,bounds,2019$/tCO2,Upper limit on carbon price
 gcprice,0.025,reg,economy,parameter,yr^-1,Growth rate of base carbon price per year
 gback,-0.012,reg,economy,parameter,yr^-1,Initial cost decline backstop cost per year
 limmiu2070,1,reg,emissions,bounds,None,Emission control limit from 2070

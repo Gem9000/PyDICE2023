@@ -15,21 +15,16 @@ from DICE_params import getParams
 
 if __name__ == '__main__':
     
-    solver_name = 'gurobi'   # enter name of solver here
+    solver_name = 'ipopt'   # enter name of solver here
+    
+    p = getParams()
+    
+    datfile = 'temp_data/unnamedscenario.dat'
     
     outputType = 1
 
     c_to_co2 = 11/3          # conversion factor from carbon to equivalent CO2
 
-
-    # argsv = [-1.0, outputType, m.numtimes, m.tstep,
-    #          m.al, m.l, m.sigma,
-    #          m.cost1tot, m.eland, m.scale1, m.scale2,
-    #          m.a1, m.a2base, m.a3,
-    #          m.rr, m.gama,
-    #          m.elasmu, m.prstp, m.expcost2,
-    #          m.k0, m.dk, m.pbacktime]
-    # args = tuple(argsv)
 
 
     ###########################################################################
@@ -39,7 +34,7 @@ if __name__ == '__main__':
     opt = SolverFactory(solver_name)
     m = AbstractModel()
     
-    m.numtimes = Param(within=PositiveIntegers)
+    m.numtimes = Param(within=PositiveIntegers, default=81)
     m.time_periods = RangeSet(1, m.numtimes+1)
     
     ###########################################################################
@@ -171,24 +166,9 @@ if __name__ == '__main__':
                        exp(m.prstp + m.betaclim * m.pi) - 1) * m.gama
             return (optlrsav, optlrsav)
 
+
     def KBounds(m,t):
         return (m.k0, m.k0) if t==1 else (m.klo, np.inf)
-
-    def LBounds(m,t):
-        return (m.pop1, m.pop1) if t==1 else (0, np.inf)
-
-    def gABounds(m,t):
-        return (m.gA1, m.gA1) if t==1 else (0, np.inf)
-
-    def aLBounds(m,t):
-        return (m.AL1, m.AL1) if t==1 else (0, np.inf)
-
-    def gsigBounds(m,t):
-        return (m.gsigma1, m.gsigma1) if t==1 else (-np.inf, np.inf)
-
-    def sigmaBounds(m,t):
-        sig1 = m.e1 / (m.q1 * (1 - m.miu1))
-        return (sig1, sig1) if t==1 else (0, np.inf)
 
     def CCATOTBounds(m,t):
         return (m.CumEmiss0, m.CumEmiss0) if t==1 else (-np.inf, np.inf)
@@ -203,22 +183,19 @@ if __name__ == '__main__':
         return (m.res00, m.res00) if t==1 else (-np.inf, np.inf)
 
     def RES1Bounds(m,t):
-        return (m.res10, m.res00) if t==1 else (-np.inf, np.inf)
+        return (m.res10, m.res10) if t==1 else (-np.inf, np.inf)
 
     def RES2Bounds(m,t):
-        return (m.res20, m.res00) if t==1 else (-np.inf, np.inf)
+        return (m.res20, m.res20) if t==1 else (-np.inf, np.inf)
 
     def RES3Bounds(m,t):
-        return (m.res30, m.res00) if t==1 else (-np.inf, np.inf)
+        return (m.res30, m.res30) if t==1 else (-np.inf, np.inf)
 
     def TBOX1Bounds(m,t):
         return (m.tbox10, m.tbox10) if t==1 else (-np.inf, np.inf)
 
     def TBOX2Bounds(m,t):
         return (m.tbox20, m.tbox20) if t==1 else (-np.inf, np.inf)
-
-    def elandBounds(m,t):
-        return (m.eland0, m.eland0) if t==1 else (-np.inf, np.inf)
 
     def F_GHGabateBounds(m,t):
         return (m.F_GHGabate2020, m.F_GHGabate2020) if t==1 else (-np.inf, np.inf)
@@ -229,46 +206,67 @@ if __name__ == '__main__':
     def alphaBounds(m,t):
         return (m.rfactlong1, m.rfactlong1) if t==1 else (m.rfactlonglo, np.inf)
 
+    # parameter bounds (needed if endogenized in the future)
+
+    # def elandBounds(m,t):
+    #     return (m.eland0, m.eland0) if t==1 else (-np.inf, np.inf)
+
+    # def LBounds(m,t):
+    #     return (m.pop1, m.pop1) if t==1 else (0, np.inf)
+
+    # def gABounds(m,t):
+    #     return (m.gA1, m.gA1) if t==1 else (0, np.inf)
+
+    # def aLBounds(m,t):
+    #     return (m.AL1, m.AL1) if t==1 else (0, np.inf)
+
+    # def gsigBounds(m,t):
+    #     return (m.gsigma1, m.gsigma1) if t==1 else (-np.inf, np.inf)
+
+    # def sigmaBounds(m,t):
+    #     sig1 = m.e1 / (m.q1 * (1 - m.miu1))
+    #     return (sig1, sig1) if t==1 else (0, np.inf)
+
 
 
 
 
     ###########################################################################
-    # Time-varying parameters (defined as variables so they can be endogenized in the future, lowercase naming convention except for L)
+    # Time-varying parameters (lowercase naming convention except for L)
     ###########################################################################
     
-    m.L          = Var(m.time_periods, domain=NonNegativeReals, bounds=LBounds)                 #level of population and labor
-    m.aL         = Var(m.time_periods, domain=NonNegativeReals, bounds=aLBounds)                #level of productivity
-    m.sigma      = Var(m.time_periods, domain=NonNegativeReals, bounds=sigmaBounds)             #CO2-emissions output ratio
-    m.sigmatot   = Var(m.time_periods, domain=NonNegativeReals)                                 #GHG-output ratio
-    m.gA         = Var(m.time_periods, domain=NonNegativeReals, bounds=gABounds)                #productivity growth rate
-    m.gL         = Var(m.time_periods, domain=NonNegativeReals)                                 #labor growth rate
-    m.gsig       = Var(m.time_periods, domain=Reals, bounds=gsigBounds)                         #Change in sigma (rate of decarbonization)
-    m.eland      = Var(m.time_periods, domain=NonNegativeReals, bounds=elandBounds)             #Emissions from deforestation (GtCO2 per year)
-    m.cost1tot   = Var(m.time_periods, domain=NonNegativeReals)                                 #Abatement cost adjusted for backstop and sigma
-    m.pbacktime  = Var(m.time_periods, domain=NonNegativeReals)                                 #Backstop price 2019$ per ton CO2
-    m.cpricebase = Var(m.time_periods, domain=NonNegativeReals)                                 #Carbon price in base case
-    m.gbacktime  = Var(m.time_periods, domain=NonNegativeReals)                                 #Decline rate of backstop price
+    m.L          = Param(m.time_periods, within=NonNegativeReals)       #level of population and labor
+    m.aL         = Var(m.time_periods, domain=NonNegativeReals)         #level of productivity
+    m.sigma      = Var(m.time_periods, domain=NonNegativeReals)         #CO2-emissions output ratio
+    m.sigmatot   = Var(m.time_periods, domain=NonNegativeReals)         #GHG-output ratio
+    m.gA         = Var(m.time_periods, domain=NonNegativeReals)         #productivity growth rate
+    m.gsig       = Var(m.time_periods, domain=Reals)                    #Change in sigma (rate of decarbonization)
+    m.eland      = Var(m.time_periods, domain=NonNegativeReals)         #Emissions from deforestation (GtCO2 per year)
+    m.cost1tot   = Var(m.time_periods, domain=NonNegativeReals)         #Abatement cost adjusted for backstop and sigma
+    m.pbacktime  = Var(m.time_periods, domain=NonNegativeReals)         #Backstop price 2019$ per ton CO2
+    m.cpricebase = Var(m.time_periods, domain=NonNegativeReals)         #Carbon price in base case
+    #m.gL         = Param(m.time_periods)                                #labor growth rate, currently isn't used for anything but is in GAMS code
+    #m.gbacktime  = Param(m.time_periods)                                #Decline rate of backstop price, currently isn't used for anything but is in GAMS code
     
     # precautionary dynamic parameters
-    m.varpcc     = Var(m.time_periods, domain=NonNegativeReals)                                 #Variance of per capita consumption
-    m.rprecaut   = Var(m.time_periods, domain=NonNegativeReals)                                 #Precautionary rate of return
-    m.rr         = Var(m.time_periods, domain=NonNegativeReals)                                 #STP with precautionary factor
-    m.rr1        = Var(m.time_periods, domain=NonNegativeReals)                                 #STP without precautionary factor
+    m.varpcc     = Var(m.time_periods, domain=NonNegativeReals)         #Variance of per capita consumption
+    m.rprecaut   = Var(m.time_periods, domain=NonNegativeReals)         #Precautionary rate of return
+    m.rr         = Var(m.time_periods, domain=NonNegativeReals)         #STP with precautionary factor
+    m.rr1        = Var(m.time_periods, domain=NonNegativeReals)         #STP without precautionary factor
     
-    # for post-processing:
-    m.scc        = Var(m.time_periods, domain=NonNegativeReals)                                 #Social cost of carbon
-    m.ppm        = Var(m.time_periods, domain=NonNegativeReals)                                 #Atmospheric concentrations parts per million
-    m.atfrac2020 = Var(m.time_periods, domain=NonNegativeReals)                                 #Atmospheric share since 2020
-    m.atfrac1765 = Var(m.time_periods, domain=NonNegativeReals)                                 #Atmospheric fraction of emissions since 1765
-    m.abaterat   = Var(m.time_periods, domain=NonNegativeReals)                                 #Abatement cost per net output
+    # for post-processing: (i.e., do not need initialized as Pyomo parameters unless endogeneity added)
+    #m.scc        = Var(m.time_periods, domain=NonNegativeReals)        #Social cost of carbon
+    #m.ppm        = Var(m.time_periods, domain=NonNegativeReals)        #Atmospheric concentrations parts per million
+    #m.atfrac2020 = Var(m.time_periods, domain=NonNegativeReals)        #Atmospheric share since 2020
+    #m.atfrac1765 = Var(m.time_periods, domain=NonNegativeReals)        #Atmospheric fraction of emissions since 1765
+    #m.abaterat   = Var(m.time_periods, domain=NonNegativeReals)        #Abatement cost per net output
+    #m.FORC_CO2   = Var(m.time_periods, domain=Reals)                   #CO2 Forcings
 
     # Time-varying parameters in FAIR and Nonco2 modules (defined as variables so they can be endogenized in the future)
-    m.CO2E_GHGabateB   = Var(m.time_periods, domain=NonNegativeReals)                             #Abateable non-CO2 GHG emissions base
-    m.CO2E_GHGabateact = Var(m.time_periods, domain=NonNegativeReals)                             #Abateable non-CO2 GHG emissions base (actual)
-    m.F_Misc           = Var(m.time_periods, domain=Reals)                                        #Non-abateable forcings (GHG and other)
-    m.emissrat         = Var(m.time_periods, domain=NonNegativeReals)                             #Ratio of CO2e to industrial emissions
-    m.FORC_CO2         = Var(m.time_periods, domain=Reals)                                        #CO2 Forcings
+    m.CO2E_GHGabateB   = Var(m.time_periods, domain=NonNegativeReals)   #Abateable non-CO2 GHG emissions base
+    #m.CO2E_GHGabateact = Param(m.time_periods)                          #Abateable non-CO2 GHG emissions base (actual), currently isn't used for anything but is in GAMS code
+    m.F_Misc           = Var(m.time_periods, domain=Reals)              #Non-abateable forcings (GHG and other)
+    m.emissrat         = Var(m.time_periods, domain=NonNegativeReals)   #Ratio of CO2e to industrial emissions
 
 
 
@@ -277,45 +275,51 @@ if __name__ == '__main__':
     ###########################################################################
     # Nonnegative variables: MIU, TATM, MAT, Y, YNET, YGROSS, C, K, I, RFACTLONG, IRFt, alpha)
     
-    m.UTILITY    = Var(domain=Reals)                                                            #utility function to maximize in objective
-    m.MIU        = Var(m.time_periods, domain=NonNegativeReals, bounds=MIUBounds)               #emission control rate
-    m.C          = Var(m.time_periods, domain=NonNegativeReals, bounds=(m.clo,np.inf))         #consumption (trillions 2019 US dollars per year)
-    m.K          = Var(m.time_periods, domain=NonNegativeReals, bounds=KBounds)                 #capital stock (trillions 2019 US dollars)
-    m.CPC        = Var(m.time_periods, domain=NonNegativeReals, bounds=(m.cpclo,np.inf))       #per capita consumption
-    m.I          = Var(m.time_periods, domain=NonNegativeReals)                                 #Investment (trillions 2019 USD per year)
-    m.S          = Var(m.time_periods, domain=Reals, bounds=SBounds)                            #gross savings rate as fraction of gross world product
-    m.Y          = Var(m.time_periods, domain=NonNegativeReals)                                 #Gross world product net of abatement and damages (trillions 2019 USD per year)
-    m.YGROSS     = Var(m.time_periods, domain=NonNegativeReals)                                 #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
-    m.YNET       = Var(m.time_periods, domain=Reals)                                            #Output net of damages equation (trillions 2019 USD per year)
-    m.DAMAGES    = Var(m.time_periods, domain=Reals)                                            #Damages (trillions 2019 USD per year)
-    m.DAMFRAC    = Var(m.time_periods, domain=Reals)                                            #Damages as fraction of gross output
-    m.ABATECOST  = Var(m.time_periods, domain=Reals)                                            #Cost of emissions reductions (trillions 2019 USD per year)
-    m.MCABATE    = Var(m.time_periods, domain=Reals)                                            #Marginal cost of abatement (2019$ per ton CO2)
-    m.CCATOT     = Var(m.time_periods, domain=Reals, bounds=CCATOTBounds)                       #Total emissions (GtC)
-    m.PERIODU    = Var(m.time_periods, domain=Reals)                                            #One period utility function
-    m.CPRICE     = Var(m.time_periods, domain=Reals)                                            #Carbon price (2019$ per ton of CO2)
-    m.TOTPERIODU = Var(m.time_periods, domain=Reals)                                            #Period utility
-    m.RFACTLONG  = Var(m.time_periods, domain=NonNegativeReals, bounds=RFACTLONGBounds)         #Long interest factor
-    m.RSHORT     = Var(m.time_periods, domain=Reals)                                            #Long interest factor
-    m.RLONG      = Var(m.time_periods, domain=Reals)                                            #Long interest factor
+    # initialize value other than zero to avoid potential issues (exceptions: MIU, S, C, MAT)
+    # (must still be within bounds, and use init2 if initial value is specified in bounds)
+    x=p._numtimes+2
+    init1, init2 = dict(zip(np.arange(1,x),np.ones(x))), dict(zip(np.arange(2,x),np.ones(x-1)))
+    
+    m.UTILITY    = Var(domain=Reals, initialize=1)                                                                  #utility function to maximize in objective
+    m.MIU        = Var(m.time_periods, domain=NonNegativeReals, bounds=MIUBounds)                                   #emission control rate
+    m.C          = Var(m.time_periods, domain=NonNegativeReals, bounds=(m.clo,np.inf), initialize = dict(zip(np.arange(2,x),np.ones(x-1)*m.clo))) #consumption (trillions 2019 US dollars per year)
+    m.K          = Var(m.time_periods, domain=NonNegativeReals, bounds=KBounds, initialize = init2)                 #capital stock (trillions 2019 US dollars)
+    m.CPC        = Var(m.time_periods, domain=NonNegativeReals, bounds=(m.cpclo,np.inf), initialize = init2)       #per capita consumption
+    m.I          = Var(m.time_periods, domain=NonNegativeReals, initialize = init1)                                 #Investment (trillions 2019 USD per year)
+    m.S          = Var(m.time_periods, domain=Reals, bounds=SBounds)                                                #gross savings rate as fraction of gross world product
+    m.Y          = Var(m.time_periods, domain=NonNegativeReals, initialize = init2)                                 #Gross world product net of abatement and damages (trillions 2019 USD per year)
+    m.YGROSS     = Var(m.time_periods, domain=NonNegativeReals, initialize = init2)                                 #Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
+    m.YNET       = Var(m.time_periods, domain=NonNegativeReals, initialize = init2)                                 #Output net of damages equation (trillions 2019 USD per year)
+    m.DAMAGES    = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Damages (trillions 2019 USD per year)
+    m.DAMFRAC    = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Damages as fraction of gross output
+    m.ABATECOST  = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Cost of emissions reductions (trillions 2019 USD per year)
+    m.MCABATE    = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Marginal cost of abatement (2019$ per ton CO2)
+    m.CCATOT     = Var(m.time_periods, domain=Reals, bounds=CCATOTBounds, initialize = init2)                       #Total emissions (GtC)
+    m.PERIODU    = Var(m.time_periods, domain=Reals, initialize = init1)                                            #One period utility function
+    m.CPRICE     = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Carbon price (2019$ per ton of CO2)
+    m.TOTPERIODU = Var(m.time_periods, domain=Reals,initialize = init1)                                             #Period utility
+    m.RFACTLONG  = Var(m.time_periods, domain=NonNegativeReals, bounds=RFACTLONGBounds, initialize = init2)         #Long interest factor
+    m.RSHORT     = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Short interest factor
+    m.RLONG      = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Long interest factor
 
     # Variables in FAIR and Nonco2 modules
-    m.FORC       = Var(m.time_periods, domain=Reals)                                            #Increase in radiative forcing (watts per m2 from 1765)
-    m.TATM       = Var(m.time_periods, domain=NonNegativeReals, bounds=TATMBounds)              #temperature increase in atmosphere (degrees C from 1765)
-    m.TBOX1      = Var(m.time_periods, domain=Reals, bounds=TBOX1Bounds)                        #Increase temperature of box 1 (degrees C from 1765)
-    m.TBOX2      = Var(m.time_periods, domain=Reals, bounds=TBOX2Bounds)                        #Increase temperature of box 2 (degrees C from 1765)
-    m.RES0       = Var(m.time_periods, domain=Reals, bounds=RES0Bounds)                         #carbon concentration reservoir 0 (GtC from 1765)
-    m.RES1       = Var(m.time_periods, domain=Reals, bounds=RES1Bounds)                         #carbon concentration reservoir 1 (GtC from 1765)
-    m.RES2       = Var(m.time_periods, domain=Reals, bounds=RES2Bounds)                         #carbon concentration reservoir 2 (GtC from 1765)
-    m.RES3       = Var(m.time_periods, domain=Reals, bounds=RES3Bounds)                         #carbon concentration reservoir 3 (GtC from 1765)
-    m.MAT        = Var(m.time_periods, domain=NonNegativeReals, bounds=MATBounds)               #carbon concentration increase in atmosphere (GtC from 1765)
-    m.CACC       = Var(m.time_periods, domain=Reals)                                            #Accumulated carbon in ocean and other sinks (GtC)
-    m.IRFt       = Var(m.time_periods, domain=NonNegativeReals)                                 #IRF100 at time t
-    m.ECO2       = Var(m.time_periods, domain=Reals)                                            #Total CO2 emissions (GtCO2 per year)
-    m.ECO2E      = Var(m.time_periods, domain=Reals)                                            #Total CO2e emissions including abateable nonCO2 GHG (GtCO2 per year)
-    m.EIND       = Var(m.time_periods, domain=Reals)                                            #Industrial CO2 emissions (GtCO2 per yr)
-    m.F_GHGabate = Var(m.time_periods, domain=Reals, bounds=F_GHGabateBounds)                   #Forcings of abatable nonCO2 GHG
-    m.alpha      = Var(m.time_periods, domain=NonNegativeReals, bounds=(m.alphalo,m.alphaup)) #Carbon decay time scaling factor
+    m.FORC       = Var(m.time_periods, domain=Reals,initialize = init2)                                             #Increase in radiative forcing (watts per m2 from 1765)
+    m.TATM       = Var(m.time_periods, domain=NonNegativeReals, bounds=TATMBounds, initialize = init2)              #temperature increase in atmosphere (degrees C from 1765)
+    m.TBOX1      = Var(m.time_periods, domain=Reals, bounds=TBOX1Bounds, initialize = init2)                        #Increase temperature of box 1 (degrees C from 1765)
+    m.TBOX2      = Var(m.time_periods, domain=Reals, bounds=TBOX2Bounds, initialize = init2)                        #Increase temperature of box 2 (degrees C from 1765)
+    m.RES0       = Var(m.time_periods, domain=Reals, bounds=RES0Bounds, initialize = init2)                         #carbon concentration reservoir 0 (GtC from 1765)
+    m.RES1       = Var(m.time_periods, domain=Reals, bounds=RES1Bounds, initialize = init2)                         #carbon concentration reservoir 1 (GtC from 1765)
+    m.RES2       = Var(m.time_periods, domain=Reals, bounds=RES2Bounds, initialize = init2)                         #carbon concentration reservoir 2 (GtC from 1765)
+    m.RES3       = Var(m.time_periods, domain=Reals, bounds=RES3Bounds, initialize = init2)                         #carbon concentration reservoir 3 (GtC from 1765)
+    m.MAT        = Var(m.time_periods, domain=NonNegativeReals, bounds=MATBounds, initialize = dict(zip(np.arange(2,x),np.ones(x-1)*m.matlo))) #carbon concentration increase in atmosphere (GtC from 1765)
+    m.CACC       = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Accumulated carbon in ocean and other sinks (GtC)
+    m.IRFt       = Var(m.time_periods, domain=NonNegativeReals, initialize = init1)                                 #IRF100 at time t
+    m.ECO2       = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Total CO2 emissions (GtCO2 per year)
+    m.ECO2E      = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Total CO2e emissions including abateable nonCO2 GHG (GtCO2 per year)
+    m.EIND       = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Industrial CO2 emissions (GtCO2 per yr)
+    m.F_GHGabate = Var(m.time_periods, domain=Reals, bounds=F_GHGabateBounds, initialize = init2)                   #Forcings of abatable nonCO2 GHG
+    m.alpha      = Var(m.time_periods, domain=NonNegativeReals, bounds=(m.alphalo,m.alphaup), initialize = init2) #Carbon decay time scaling factor
+
     
 
 
@@ -328,51 +332,79 @@ if __name__ == '__main__':
     
     ## Parameters
     
-    def varpccEQ(m,t): # Variance of per capita consumption
-        return m.varpcc[t] == min(m.siggc1**2*5*(t-1), m.siggc1**2*5*47)
-    m._varpccEQ = Constraint(m.time_periods, rule=varpccEQ)
+    # def varpccEQ(m,t): # Variance of per capita consumption
+    #     return m.varpcc[t] == min(p._siggc1**2*5*(t-1), p._siggc1**2*5*47)
+    # m._varpccEQ = Constraint(m.time_periods, rule=varpccEQ)
     
-    def rprecautEQ(m,t): # Precautionary rate of return
-        return m.rprecaut[t] == -0.5 * m.varpcc[t] * m.elasmu**2
-    m._rprecautEQ = Constraint(m.time_periods, rule=rprecautEQ)
+    # def rprecautEQ(m,t): # Precautionary rate of return
+    #     return (m.rprecaut[t] == (-0.5 * m.varpcc[t] * p._elasmu**2))
+    # m._rprecautEQ = Constraint(m.time_periods, rule=rprecautEQ)
     
-    def rr1EQ(m,t): # STP factor without precautionary factor
-        rartp = exp(m.prstp + m.betaclim * m.pi)-1
-        return m.rr1[t] == 1/((1 + rartp)**(m.tstep * (t-1)))
-    m._rr1EQ = Constraint(m.time_periods, rule=rr1EQ)
+    # def rr1EQ(m,t): # STP factor without precautionary factor
+    #     rartp = exp(p._prstp + p._betaclim * p._pi)-1
+    #     return m.rr1[t] == 1/((1 + rartp)**(p._tstep * (t-1)))
+    # m._rr1EQ = Constraint(m.time_periods, rule=rr1EQ)
     
-    def rrEQ(m,t): # STP factor with precautionary factor
-        return m.rr[t] == m.rr1[t] * (1 + m.rprecaut[t]**(-m.tstep * (t-1)))
-    m._rrEQ = Constraint(m.time_periods, rule=rrEQ)
+    # def rrEQ(m,t): # STP factor with precautionary factor
+    #     return m.rr[t] == m.rr1[t] * (1 + m.rprecaut[t])**(-p._tstep * (t-1))
+    # m._rrEQ = Constraint(m.time_periods, rule=rrEQ)
     
-    def LEQ(m,t): # Population adjustment over time (note initial condition)
-        return m.L[t] == m.L[t-1]*(m.popasym / m.L[t-1])**m.popadj if t > 1 else Constraint.Skip
-    m._LEQ = Constraint(m.time_periods, rule=LEQ)
+    # def LEQ(m,t): # Population adjustment over time (note initial condition)
+    #     return m.L[t] == m.L[t-1]*(p._popasym / m.L[t-1])**p._popadj if t > 1 else Constraint.Skip
+    # m._LEQ = Constraint(m.time_periods, rule=LEQ)
     
-    def gAEQ(m,t): # Growth rate of productivity (note initial condition - can either enforce through bounds or this constraint)
-        return m.gA[t] == m.gA1 * exp(-m.delA * m.tstep * (t-1)) if t > 1 else Constraint.Skip
-    m._gAEQ = Constraint(m.time_periods, rule=gAEQ)
+    # def gAEQ(m,t): # Growth rate of productivity (note initial condition - can either enforce through bounds or this constraint)
+    #     return m.gA[t] == p._gA1 * exp(-p._delA * p._tstep * (t-1)) if t > 1 else Constraint.Skip
+    # m._gAEQ = Constraint(m.time_periods, rule=gAEQ)
     
-    def aLEQ(m,t): # Level of total factor productivity (note initial condition)
-        return m.aL[t] == m.aL[t-1] /((1-m.gA[t-1])) if t > 1 else Constraint.Skip
-    m._aLEQ = Constraint(m.time_periods, rule=aLEQ)
+    # def aLEQ(m,t): # Level of total factor productivity (note initial condition)
+    #     return m.aL[t] == m.aL[t-1] /((1-m.gA[t-1])) if t > 1 else Constraint.Skip
+    # m._aLEQ = Constraint(m.time_periods, rule=aLEQ)
 
-    def cpricebaseEQ(m,t): # Carbon price in base case of model
-        return m.cpricebase[t] == m.cprice1 * (1 + m.gcprice)**(m.tstep * (t-1))
-    m._cpricebaseEQ = Constraint(m.time_periods, rule=cpricebaseEQ)
+    # def cpricebaseEQ(m,t): # Carbon price in base case of model
+    #     return m.cpricebase[t] == p._cprice1 * ((1 + p._gcprice)**(p._tstep * (t-1)))
+    # m._cpricebaseEQ = Constraint(m.time_periods, rule=cpricebaseEQ)
     
-    def pbacktimeEQ(m,t): # Backstop price 2019$ per ton CO2
-        j = 0.01 if t <= 7 else 0.001
-        return m.pbacktime[t] == m.pback2050 * exp(-m.tstep * j * (t-7))
-    m._pbacktimeEQ = Constraint(m.time_periods, rule=pbacktimeEQ)
+    # def pbacktimeEQ(m,t): # Backstop price 2019$ per ton CO2
+    #     j = 0.01 if t <= 7 else 0.001
+    #     return m.pbacktime[t] == p._pback2050 * exp(-p._tstep * j * (t-7))
+    # m._pbacktimeEQ = Constraint(m.time_periods, rule=pbacktimeEQ)
     
-    def gsigEQ(m,t): # Change in rate of sigma (rate of decarbonization)
-        return m.gsig[t] == min(m.gsigma1 * m.delgsig**(t-1), m.asymgsig)
-    m._gsigEQ = Constraint(m.time_periods, rule=gsigEQ)
+    # def gsigEQ(m,t): # Change in rate of sigma (rate of decarbonization)
+    #     return m.gsig[t] == min(p._gsigma1 * (p._delgsig**(t-1)), p._asymgsig)
+    # m._gsigEQ = Constraint(m.time_periods, rule=gsigEQ)
     
-    def sigmaEQ(m,t): # CO2 emissions output ratio (note initial condition)
-        return m.sigma[t] == m.sigma[t-1] * exp(m.tstep * m.gsig[t-1]) if t > 1 else Constraint.Skip
-    m._sigmaEQ = Constraint(m.time_periods, rule=sigmaEQ)
+    # def sigmaEQ(m,t): # CO2 emissions output ratio (note initial condition)
+    #     return m.sigma[t] == m.sigma[t-1] * exp(p._tstep * m.gsig[t-1]) if t > 1 else Constraint.Skip
+    # m._sigmaEQ = Constraint(m.time_periods, rule=sigmaEQ)
+    
+    
+    
+    ## NonCO2 Forcings Equations (parameters)
+    
+    # def elandEQ(m,t):
+    #     return m.eland[t] == p._eland0 * (1 - p._deland)**(t-1)
+    # m._elandEQ = Constraint(m.time_periods, rule=elandEQ)
+    
+    # def CO2E_GHGabateBEQ(m,t):
+    #     return m.CO2E_GHGabateB[t] == p._ECO2eGHGB2020 + ((p._ECO2eGHGB2100 - p._ECO2eGHGB2020) / 16) * (t-1) if t <= 16 else m.CO2E_GHGabateB[t] == p._ECO2eGHGB2100
+    # m._CO2E_GHGabateBEQ = Constraint(m.time_periods, rule=CO2E_GHGabateBEQ)
+    
+    # def F_MiscEQ(m,t):
+    #     return m.F_Misc[t] == p._F_Misc2020 + ((p._F_Misc2100 - p._F_Misc2020) / 16) * (t-1) if t <= 16 else m.F_Misc[t] == p._F_Misc2100
+    # m._F_MiscEQ = Constraint(m.time_periods, rule=F_MiscEQ)
+    
+    # def emissratEQ(m,t):
+    #     return m.emissrat[t] == p._emissrat2020 + ((p._emissrat2100 - p._emissrat2020) / 16) * (t-1) if t <= 16 else m.emissrat[t] == p._emissrat2100
+    # m._emissratEQ = Constraint(m.time_periods, rule=emissratEQ)
+    
+    # def sigmatotEQ(m,t):
+    #     return m.sigmatot[t] == m.sigma[t] * m.emissrat[t]
+    # m._sigmatotEQ = Constraint(m.time_periods, rule=sigmatotEQ)
+    
+    # def cost1totEQ(m,t):
+    #     return m.cost1tot[t] == m.pbacktime[t] * m.sigmatot[t] / p._expcost2 / 1000
+    # m._cost1totEQ = Constraint(m.time_periods, rule=cost1totEQ)
     
     
     
@@ -449,7 +481,7 @@ if __name__ == '__main__':
     m._IEQ = Constraint(m.time_periods, rule=IEQ)
     
     def KEQ(m,t): # note initial condition
-        return m.K[t] == (1 - m.dk)**m.tstep * m.K[t-1] + m.tstep * m.I[t-1] if t > 1 else Constraint.Skip
+        return m.K[t] <= (1 - m.dk)**m.tstep * m.K[t-1] + m.tstep * m.I[t-1] if t > 1 else Constraint.Skip
     m._KEQ = Constraint(m.time_periods, rule=KEQ)
     
     def RFACTLONGEQ(m,t): # note initial condition
@@ -501,7 +533,7 @@ if __name__ == '__main__':
     m._FORCEQ = Constraint(m.time_periods, rule=FORCEQ)
     
     def TBOX1EQ(m,t): # note initial condition
-        return m.TBOX1[t] == (m.TBOX1[t-1] * exp(-m.tstep / m.d1)) + (m.teq1 * m.FORC[t] * (1 - exp(-m.tstep/  m.d1))) if t > 1 else Constraint.Skip #NEW
+        return m.TBOX1[t] == (m.TBOX1[t-1] * exp(-m.tstep / m.d1)) + (m.teq1 * m.FORC[t] * (1 - exp(-m.tstep / m.d1))) if t > 1 else Constraint.Skip #NEW
     m._TBOX1EQ = Constraint(m.time_periods, rule=TBOX1EQ)
     
     def TBOX2EQ(m,t): # note initial condition
@@ -523,33 +555,6 @@ if __name__ == '__main__':
         return m.IRFt[t] == m.irf0 + (m.irC * m.CACC[t]) + (m.irT * m.TATM[t]) #NEW
     m._irfeqrhs = Constraint(m.time_periods, rule=irfeqrhs)
 
-
-
-    ## NonCO2 Forcings Equations
-    
-    def elandEQ(m,t):
-        return m.eland[t] == m.eland0 * (1 - m.deland)**(t-1)
-    m._elandEQ = Constraint(m.time_periods, rule=elandEQ)
-    
-    def CO2E_GHGabateBEQ(m,t):
-        return m.CO2E_GHGabateB[t] == m.ECO2eGHGB2020 + ((m.ECO2eGHGB2100 - m.ECO2eGHGB2020) / 16) * (t-1) if t <= 16 else m.CO2E_GHGabateB[t] == m.ECO2eGHGB2100
-    m._CO2E_GHGabateBEQ = Constraint(m.time_periods, rule=CO2E_GHGabateBEQ)
-    
-    def F_MiscEQ(m,t):
-        return m.F_Misc[t] == m.F_Misc2020 + ((m.F_Misc2100 - m.F_Misc2020) / 16) * (t-1) if t <= 16 else m.F_Misc[t] == m.F_Misc2100
-    m._F_MiscEQ = Constraint(m.time_periods, rule=F_MiscEQ)
-    
-    def emissratEQ(m,t):
-        return m.emissrat[t] == m.emissrat2020 + ((m.emissrat2100 - m.emissrat2020) / 16) * (t-1) if t <= 16 else m.emissrat[t] == m.emissrat2100
-    m._emissratEQ = Constraint(m.time_periods, rule=emissratEQ)
-    
-    def sigmatotEQ(m,t):
-        return m.sigmatot[t] == m.sigma[t] * m.emissrat[t]
-    m._sigmatotEQ = Constraint(m.time_periods, rule=sigmatotEQ)
-    
-    def cost1totEQ(m,t):
-        return m.cost1tot[t] == m.pbacktime[t] * m.sigmatot[t] / m.expcost2 / 1000
-    m._cost1totEQ = Constraint(m.time_periods, rule=cost1totEQ)
     
 
 
@@ -589,9 +594,9 @@ if __name__ == '__main__':
 
     start = time.time()
     
-    m1 = m.create_instance('temp_data/data.dat')
+    m1 = m.create_instance(datfile)
     
-    result = opt.solve(m1,tee=True)#,symbolic_solver_labels=True)
+    result = opt.solve(m1,tee=True, symbolic_solver_labels=True)
     #m1.solutions.load_from(result)
     
     end = time.time()
