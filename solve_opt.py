@@ -34,8 +34,9 @@ if __name__ == '__main__':
     # build model
     m = build_model(p)
     opt = SolverFactory(solver_name)
-    
+    opt.set_instance(m)
     # solve model
+
     sol = opt.solve(m, tee=True)
     
 

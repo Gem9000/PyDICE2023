@@ -7,6 +7,7 @@ from pyomo.environ import *
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 def get_df(model): #needs solved pyomo model passed to it
     
@@ -29,6 +30,29 @@ def get_df(model): #needs solved pyomo model passed to it
             df[varnames[v]] = [mvars[v][i].value for i in mvars[v]]
     
     return df
+
+
+def plot_results(df, save=False, sc_name='unnamedScenario'):
+
+    for i in range(2,len(df.columns)):
+        data = df.iloc[:,i].copy
+        fig, ax = plt.subplots()
+        plt.plot(df['year'],df[df.columns[i-1]])
+        plt.xlabel('year')
+        try:
+            plt.title(df.columns[i-1] + ': ' + label_mapper[df.columns[i-1]])
+        except:
+            plt.title(df.columns[i-1])
+
+        if save == True:
+            figpath = 'outputs/{}/figures/'.format(sc_name)
+            os.makedirs(figpath, exist_ok=True)
+            plt.savefig(figpath + df.columns[i-1] + '.png',dpi=300,bbox_inches='tight',facecolor='w')
+        else:
+            plt.show()
+
+    return None
+
 
 label_mapper = {'L':'Population [millions]',
 'aL':'Productivity',
@@ -59,36 +83,36 @@ label_mapper = {'L':'Population [millions]',
 'DAMAGES':'Damages (Trill 2019 USD/year)',
 'DAMFRAC':'Damages as fraction of gross output',
 'ABATECOST':'Cost of emissions reductions (Trill 2019 USD/yr)',
-'MCABATE':'',
-'CCATOT':'',
-'PERIODU':'',
-'CPRICE':'',
-'TOTPERIODU':'',
-'RFACTLONG':'',
-'RSHORT':'',
-'RLONG':'',
-'FORC':'',
-'TATM':'',
-'TBOX1':'',
-'TBOX2':'',
-'RES0':'',
-'RES1':'',
-'RES2':'',
-'RES3':'',
-'MAT':'',
-'CACC':'',
-'IRFt':'',
-'ECO2':'',
-'ECO2E':'',
-'EIND':'',
-'F_GHGabate':'',
-'alpha':''}
+'MCABATE':'Marginal cost of abatement (2019$ per ton CO2)',
+'CCATOT':'Total emissions (GtC)',
+'PERIODU':'Single period utility function',
+'CPRICE':'Carbon price (2019$/tonCO2)',
+'TOTPERIODU':'Period Utility',
+'RFACTLONG':'Long interest factor',
+'RSHORT':'Real interest rate w/ precautionary (per annum year on year)',
+'RLONG':'Real interest rate from year 0 to T',
+'FORC':'Increase in radiative forcing (W/m2 from 1765)',
+'TATM':'Temp increase in atm. (deg C from 1765)',
+'TBOX1':'Increase temp. of box 1 (deg C from 1765)',
+'TBOX2':'Increase temp. of box 2 (deg C from 1765)',
+'RES0':'C conc. Reservoir 0 (GtC from 1765)',
+'RES1':'C conc. Reservoir 1 (GtC from 1765)',
+'RES2':'C conc. Reservoir 2 (GtC from 1765)',
+'RES3':'C conc. Reservoir 3 (GtC from 1765)',
+'MAT':'C conc. increase in atm. (GtC from 1765)',
+'CACC':'Accumulated carbon in ocean and other sinks (GtC)',
+'IRFt':'IRF100 at time t',
+'ECO2':'Total CO2 emissions (GtCO2/yr)',
+'ECO2E':'Total CO2e emissions incl. abateable nonCO2 GHG (GtCO2/yr)',
+'EIND':'Industrial CO2 emissions (GtCO2/yr)',
+'F_GHGabate':'Forcings of abatable nonCO2 GHG',
+'alpha':'Carbon decay time scaling factor',
+'scc':'Social Cost of Carbon',
+'ppm':'Atmospheric Concentration in ppm',
+'abaterat':'Cost of emis. reduction / Gross world product net of abatement and damages',
+'atfrac2020':'',
+'atfrac1765':'',
+'FORC_CO2':'CO2 Forcings',
+'MCABATE':'Marginal cost of abatement (2019$/tonCO2)',
+'CPRICE':'Carbon price (2019$/tonCO2)'}
 
-
-df = pd.read_csv('outputs/defaultScenario.csv')
-
-fig, ax = plt.subplots()
-plt.plot(df['year'],df['L'])
-plt.xlabel('year')
-plt.title('L: Population [millions]')
-plt.show()
