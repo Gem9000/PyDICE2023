@@ -32,24 +32,29 @@ def get_df(model): #needs solved pyomo model passed to it
     return df
 
 
-def plot_results(df, save=False, sc_name='unnamedScenario'):
+def plot_results(df, save=False, sc_name='unnamedScenario', end_yr = 2100):
 
-    for i in range(2,len(df.columns)):
-        data = df.iloc[:,i].copy
-        fig, ax = plt.subplots()
-        plt.plot(df['year'],df[df.columns[i-1]])
-        plt.xlabel('year')
-        try:
-            plt.title(df.columns[i-1] + ': ' + label_mapper[df.columns[i-1]])
-        except:
-            plt.title(df.columns[i-1])
+    for i in range(1,len(df.columns)):
+        if df.columns[i] != 'UTILITY':
+            single_plot(df, col=df.columns[i], save=save, sc_name=sc_name, end_yr = end_yr)
 
-        if save == True:
-            figpath = 'outputs/{}/figures/'.format(sc_name)
-            os.makedirs(figpath, exist_ok=True)
-            plt.savefig(figpath + df.columns[i-1] + '.png',dpi=300,bbox_inches='tight',facecolor='w')
-        else:
-            plt.show()
+    return None
+
+def single_plot(df, col, save=False, sc_name='unnamedScenario', end_yr = 2100):
+    
+    idx=int((end_yr-df['year'][0])/(df['year'][1]-df['year'][0])) + 1
+    
+    fig, ax = plt.subplots()
+    plt.plot(df['year'][0:idx],df[col][0:idx])
+    plt.xlabel('year')
+    plt.title(col + ': ' + label_mapper[col])
+
+    if save == True:
+        figpath = 'outputs/{}/figures/'.format(sc_name)
+        os.makedirs(figpath, exist_ok=True)
+        plt.savefig(figpath + col + '.png',dpi=300,bbox_inches='tight',facecolor='w')
+    else:
+        plt.show()
 
     return None
 

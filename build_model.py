@@ -20,6 +20,7 @@ def build_model(params):
     ###########################################################################
 
     m = ConcreteModel()
+    m.dual = Suffix(direction=Suffix.IMPORT)
     m.time_periods = RangeSet(1, p._numtimes)
     m.year = Param(m.time_periods,initialize=dict(zip(np.arange(1,p._numtimes+1), # to pass along for output dataframe
                 np.linspace(p._yr0, p._finalyr, p._numtimes+1, dtype=np.int32))))
