@@ -174,13 +174,13 @@ def build_model(params):
     m.CPC        = Var(m.time_periods, domain=NonNegativeReals, bounds=(p._cpclo,np.inf), initialize = init2)       #per capita consumption
     m.I          = Var(m.time_periods, domain=NonNegativeReals, initialize = init1)                                 #Investment (trillions 2019 USD per year)
     m.S          = Var(m.time_periods, domain=Reals, bounds=SBounds)                                                #gross savings rate as fraction of gross world product
-    m.Y          = Var(m.time_periods, domain=NonNegativeReals, initialize = init2)                                 #Gross world product net of abatement and damages (Trill 2019 USD/yr)
-    m.YGROSS     = Var(m.time_periods, domain=NonNegativeReals, initialize = init2)                                 #Gross world product GROSS of abatement and damages (Trill 2019 USD/yr)
-    m.YNET       = Var(m.time_periods, domain=NonNegativeReals, initialize = init2)                                 #Output net of damages equation (trillions 2019 USD per year)
-    m.DAMAGES    = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Damages (trillions 2019 USD per year)
-    m.DAMFRAC    = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Damages as fraction of gross output
-    m.ABATECOST  = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Cost of emissions reductions (trillions 2019 USD per year)
-    m.MCABATE    = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Marginal cost of abatement (2019$ per ton CO2)
+    m.Y          = Var(m.time_periods, domain=NonNegativeReals, initialize = init1)                                 #Gross world product net of abatement and damages (Trill 2019 USD/yr)
+    m.YGROSS     = Var(m.time_periods, domain=NonNegativeReals, initialize = init1)                                 #Gross world product GROSS of abatement and damages (Trill 2019 USD/yr)
+    m.YNET       = Var(m.time_periods, domain=NonNegativeReals, initialize = init1)                                 #Output net of damages equation (trillions 2019 USD per year)
+    m.DAMAGES    = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Damages (trillions 2019 USD per year)
+    m.DAMFRAC    = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Damages as fraction of gross output
+    m.ABATECOST  = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Cost of emissions reductions (trillions 2019 USD per year)
+    m.MCABATE    = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Marginal cost of abatement (2019$ per ton CO2)
     m.CCATOT     = Var(m.time_periods, domain=Reals, bounds=CCATOTBounds, initialize = init2)                       #Total emissions (GtC)
     m.PERIODU    = Var(m.time_periods, domain=Reals, initialize = init1)                                            #One period utility function
     m.CPRICE     = Var(m.time_periods, domain=Reals, bounds=CPRICEBounds, initialize = init2)                       #Carbon price (2019$ per ton of CO2)
