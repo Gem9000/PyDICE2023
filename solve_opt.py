@@ -30,7 +30,7 @@ if __name__ == '__main__':
     scenario_name = 'defaultScenario'
     
     # save csv of outputs, uses scenario_name to name file
-    write_csv = True
+    write_csv = False
     
     # if true, will run the generate_plots() function within write_outputs
     generate_plots = False
