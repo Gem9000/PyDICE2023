@@ -30,17 +30,18 @@ if __name__ == '__main__':
     scenario_name = 'defaultScenario'
     
     # save csv of outputs, uses scenario_name to name file
-    write_csv = True
+    write_csv = False
     
     # if true, will run the generate_plots() function within write_outputs
-    generate_plots = False
+    generate_plots = True
     
     # if true, saves each plot generated within a new folder named after scenario_name.
     # if false, prints each plot to stdout
     save_plots = False
     
-    # get parameters
-    p = getParamsfromfile(input_file = 'inputs/param_inputs.csv')
+    # get parameters from file ("col" keyword refers to the integer column index in the csv,
+                            # where 1 refers to the first column of data, not counting the column of parameter names)
+    p = getParamsfromfile(input_file = 'inputs/param_inputs.csv', col=1)
     #p = defaultParams()         # use default parameters instead (hard-coded into DICE_params.py)
     
     simParams(paramObj = p)     # simulate time-varying parameters (pass getParamsfromfile or defaultParams object)
@@ -83,7 +84,7 @@ if __name__ == '__main__':
     
     
     if generate_plots == True:
-        plot_results(results, save=False, sc_name=scenario_name)
+        plot_results(results, save=save_plots, sc_name=scenario_name)
     # note: can generate a single plot by calling single_plot(results, col='column_to_plot', save=False, sc_name='unnamedScenario')
 
     end = time.time()

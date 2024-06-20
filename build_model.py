@@ -31,9 +31,9 @@ def build_model(params):
     
     def MIUBounds(m,t):
         if t == 1:
-            return (p._miu1, p._miu1) # initial value
+            return (0, p._miu1) # initial value
         elif t == 2:
-            return (p._miu2, p._miu2) # 2nd initial value
+            return (0, p._miu2) # 2nd initial value
         elif (t > 2) & (t <= 8):
             return (0, p._delmiumax * (t - 1))
         elif (t > 8) & (t <= 11):
@@ -47,10 +47,10 @@ def build_model(params):
         elif t > 57:
             return (0, p._limmiu2300)
 
-    def SBounds(m,t): # lag 10
-        if (t <= 37) & (t <= p._numtimes - 10):
+    def SBounds(m,t): # lag 5
+        if (t <= 37) & (t <= p._numtimes - 5):
             return (-np.inf,np.inf)
-        elif (t <= 37) & (t > p._numtimes - 10):
+        elif (t <= 37) & (t > p._numtimes - 5):
             optlrsav = (p._dk + .004) / (p._dk + .004 * p._elasmu +
                         exp(p._prstp + p._betaclim * p._pi) - 1) * p._gama
             return (optlrsav, optlrsav)
@@ -117,7 +117,7 @@ def build_model(params):
         return (p._rfactlong1, p._rfactlong1) if t==1 else (p._rfactlonglo, np.inf)
 
     def alphaBounds(m,t):
-        return (p._rfactlong1, p._rfactlong1) if t==1 else (p._rfactlonglo, np.inf)
+        return (p._alphalo, p._alphaup) if t==1 else (p._rfactlonglo, np.inf)
 
 
 
