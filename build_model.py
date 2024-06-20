@@ -174,13 +174,13 @@ def build_model(params):
     m.CPC        = Var(m.time_periods, domain=NonNegativeReals, bounds=(p._cpclo,np.inf), initialize = init2)       #per capita consumption
     m.I          = Var(m.time_periods, domain=NonNegativeReals, initialize = init1)                                 #Investment (trillions 2019 USD per year)
     m.S          = Var(m.time_periods, domain=Reals, bounds=SBounds)                                                #gross savings rate as fraction of gross world product
-    m.Y          = Var(m.time_periods, domain=NonNegativeReals, initialize = init2)                                 #Gross world product net of abatement and damages (Trill 2019 USD/yr)
-    m.YGROSS     = Var(m.time_periods, domain=NonNegativeReals, initialize = init2)                                 #Gross world product GROSS of abatement and damages (Trill 2019 USD/yr)
-    m.YNET       = Var(m.time_periods, domain=NonNegativeReals, initialize = init2)                                 #Output net of damages equation (trillions 2019 USD per year)
-    m.DAMAGES    = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Damages (trillions 2019 USD per year)
-    m.DAMFRAC    = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Damages as fraction of gross output
-    m.ABATECOST  = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Cost of emissions reductions (trillions 2019 USD per year)
-    m.MCABATE    = Var(m.time_periods, domain=Reals, initialize = init2)                                            #Marginal cost of abatement (2019$ per ton CO2)
+    m.Y          = Var(m.time_periods, domain=NonNegativeReals, initialize = init1)                                 #Gross world product net of abatement and damages (Trill 2019 USD/yr)
+    m.YGROSS     = Var(m.time_periods, domain=NonNegativeReals, initialize = init1)                                 #Gross world product GROSS of abatement and damages (Trill 2019 USD/yr)
+    m.YNET       = Var(m.time_periods, domain=NonNegativeReals, initialize = init1)                                 #Output net of damages equation (trillions 2019 USD per year)
+    m.DAMAGES    = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Damages (trillions 2019 USD per year)
+    m.DAMFRAC    = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Damages as fraction of gross output
+    m.ABATECOST  = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Cost of emissions reductions (trillions 2019 USD per year)
+    m.MCABATE    = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Marginal cost of abatement (2019$ per ton CO2)
     m.CCATOT     = Var(m.time_periods, domain=Reals, bounds=CCATOTBounds, initialize = init2)                       #Total emissions (GtC)
     m.PERIODU    = Var(m.time_periods, domain=Reals, initialize = init1)                                            #One period utility function
     m.CPRICE     = Var(m.time_periods, domain=Reals, bounds=CPRICEBounds, initialize = init2)                       #Carbon price (2019$ per ton of CO2)
@@ -312,11 +312,11 @@ def build_model(params):
     m._ECO2EEQ = Constraint(m.time_periods, rule=ECO2EEQ)
     
     def F_GHGabateEQ(m,t): # note initial condition
-        return m.F_GHGabate[t] == p._Fcoef2 * m.F_GHGabate[t-1] + p._Fcoef1 * m.CO2E_GHGabateB[t-1] * (1 - m.MIU[t-1]) if t > 1 else Constraint.Skip
+        return m.F_GHGabate[t+1] == p._Fcoef2 * m.F_GHGabate[t] + p._Fcoef1 * m.CO2E_GHGabateB[t] * (1 - m.MIU[t]) if t < p._numtimes else Constraint.Skip
     m._F_GHGabateEQ = Constraint(m.time_periods, rule=F_GHGabateEQ)
     
     def CCATOTEQ(m,t): # note initial condition
-        return m.CCATOT[t] == m.CCATOT[t-1] + m.ECO2[t-1] * (p._tstep / c_to_co2) if t > 1 else Constraint.Skip
+        return m.CCATOT[t+1] == m.CCATOT[t] + m.ECO2[t] * (p._tstep / c_to_co2) if t < p._numtimes else Constraint.Skip
     m._CCATOTEQ = Constraint(m.time_periods, rule=CCATOTEQ)
     
     def DAMFRACEQ(m,t):
@@ -364,19 +364,19 @@ def build_model(params):
     m._IEQ = Constraint(m.time_periods, rule=IEQ)
     
     def KEQ(m,t): # note initial condition
-        return m.K[t] <= ((1 - p._dk)**p._tstep) * m.K[t-1] + p._tstep * m.I[t-1] if t > 1 else Constraint.Skip
+        return m.K[t+1] <= ((1 - p._dk)**p._tstep) * m.K[t] + p._tstep * m.I[t] if t < p._numtimes else Constraint.Skip
     m._KEQ = Constraint(m.time_periods, rule=KEQ)
     
     def RFACTLONGEQ(m,t): # note initial condition
-        return m.RFACTLONG[t] == p._SRF * ((m.CPC[t] / m.CPC[1])**(-p._elasmu))*m.rr[t] if t > 1 else Constraint.Skip #NEW
+        return m.RFACTLONG[t+1] == p._SRF * ((m.CPC[t+1] / m.CPC[1])**(-p._elasmu))*m.rr[t+1] if t < p._numtimes else Constraint.Skip #NEW
     m._RFACTLONGEQ = Constraint(m.time_periods, rule=RFACTLONGEQ) ##
     
     def RLONGEQ(m,t): # note initial condition
-        return m.RLONG[t] == -log(m.RFACTLONG[t] / p._SRF) / (p._tstep * (t-1)) if t > 1 else Constraint.Skip #NEW
+        return m.RLONG[t+1] == -log(m.RFACTLONG[t+1] / p._SRF) / (p._tstep * t) if t < p._numtimes else Constraint.Skip #NEW
     m._RLONGEQ = Constraint(m.time_periods, rule=RLONGEQ)
     
     def RSHORTEQ(m,t): # note initial condition
-        return m.RSHORT[t] == -log(m.RFACTLONG[t] / m.RFACTLONG[t-1]) / p._tstep if t > 1 else Constraint.Skip #NEW
+        return m.RSHORT[t+1] == -log(m.RFACTLONG[t+1] / m.RFACTLONG[t]) / p._tstep if t < p._numtimes else Constraint.Skip #NEW
     m._RSHORTEQ = Constraint(m.time_periods, rule=RSHORTEQ)
 
 
@@ -385,27 +385,27 @@ def build_model(params):
     ## FAIR Climate Module Equations
     
     def RES0LOM(m,t): # note initial condition
-        return m.RES0[t] == (p._emshare0 * p._tau0 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-p._tstep / (p._tau0 * m.alpha[t]))) + 
-                                m.RES0[t-1] * exp(-p._tstep / (p._tau0 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
+        return m.RES0[t+1] == (p._emshare0 * p._tau0 * m.alpha[t+1] * (m.ECO2[t+1] / c_to_co2) * (1 - exp(-p._tstep / (p._tau0 * m.alpha[t+1]))) + 
+                                m.RES0[t] * exp(-p._tstep / (p._tau0 * m.alpha[t+1]))) if t < p._numtimes else Constraint.Skip #NEW
     m._RES0LOM = Constraint(m.time_periods, rule=RES0LOM)
     
     def RES1LOM(m,t): # note initial condition
-        return m.RES1[t] == (p._emshare1 * p._tau1 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-p._tstep / (p._tau1 * m.alpha[t]))) + 
-                                m.RES1[t-1] * exp(-p._tstep / (p._tau1 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
+        return m.RES1[t+1] == (p._emshare1 * p._tau1 * m.alpha[t+1] * (m.ECO2[t+1] / c_to_co2) * (1 - exp(-p._tstep / (p._tau1 * m.alpha[t+1]))) + 
+                                m.RES1[t] * exp(-p._tstep / (p._tau1 * m.alpha[t+1]))) if t < p._numtimes else Constraint.Skip #NEW
     m._RES1LOM = Constraint(m.time_periods, rule=RES1LOM)
     
     def RES2LOM(m,t): # note initial condition
-        return m.RES2[t] == (p._emshare2 * p._tau2 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-p._tstep / (p._tau2 * m.alpha[t]))) + 
-                                m.RES2[t-1] * exp(-p._tstep / (p._tau2 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
+        return m.RES2[t+1] == (p._emshare2 * p._tau2 * m.alpha[t+1] * (m.ECO2[t+1] / c_to_co2) * (1 - exp(-p._tstep / (p._tau2 * m.alpha[t+1]))) + 
+                                m.RES2[t] * exp(-p._tstep / (p._tau2 * m.alpha[t+1]))) if t < p._numtimes else Constraint.Skip #NEW
     m._RES2LOM = Constraint(m.time_periods, rule=RES2LOM)
     
     def RES3LOM(m,t): # note initial condition
-        return m.RES3[t] == (p._emshare3 * p._tau3 * m.alpha[t] * (m.ECO2[t] / c_to_co2) * (1 - exp(-p._tstep / (p._tau3 * m.alpha[t]))) + 
-                                m.RES3[t-1] * exp(-p._tstep / (p._tau3 * m.alpha[t]))) if t > 1 else Constraint.Skip #NEW
+        return m.RES3[t+1] == (p._emshare3 * p._tau3 * m.alpha[t+1] * (m.ECO2[t+1] / c_to_co2) * (1 - exp(-p._tstep / (p._tau3 * m.alpha[t+1]))) + 
+                                m.RES3[t] * exp(-p._tstep / (p._tau3 * m.alpha[t+1]))) if t < p._numtimes else Constraint.Skip #NEW
     m._RES3LOM = Constraint(m.time_periods, rule=RES3LOM)
     
     def MATEQ(m,t): # note initial condition
-        return m.MAT[t] == p._mateq + m.RES0[t] + m.RES1[t] + m.RES2[t] + m.RES3[t] if t > 1 else Constraint.Skip #NEW
+        return m.MAT[t+1] == p._mateq + m.RES0[t+1] + m.RES1[t+1] + m.RES2[t+1] + m.RES3[t+1] if t < p._numtimes else Constraint.Skip #NEW
     m._MATEQ = Constraint(m.time_periods, rule=MATEQ)
     
     def CACCEQ(m,t):
@@ -417,15 +417,15 @@ def build_model(params):
     m._FORCEQ = Constraint(m.time_periods, rule=FORCEQ) ##
     
     def TBOX1EQ(m,t): # note initial condition
-        return m.TBOX1[t] == (m.TBOX1[t-1] * exp(-p._tstep / p._d1)) + (p._teq1 * m.FORC[t] * (1 - exp(-p._tstep / p._d1))) if t > 1 else Constraint.Skip #NEW
+        return m.TBOX1[t+1] == (m.TBOX1[t] * exp(-p._tstep / p._d1)) + (p._teq1 * m.FORC[t+1] * (1 - exp(-p._tstep / p._d1))) if t < p._numtimes else Constraint.Skip #NEW
     m._TBOX1EQ = Constraint(m.time_periods, rule=TBOX1EQ)
     
     def TBOX2EQ(m,t): # note initial condition
-        return m.TBOX2[t] == (m.TBOX2[t-1] * exp(-p._tstep / p._d2)) + (p._teq2 * m.FORC[t] * (1 - exp(-p._tstep / p._d2))) if t > 1 else Constraint.Skip #NEW
+        return m.TBOX2[t+1] == (m.TBOX2[t] * exp(-p._tstep / p._d2)) + (p._teq2 * m.FORC[t+1] * (1 - exp(-p._tstep / p._d2))) if t < p._numtimes else Constraint.Skip #NEW
     m._TBOX2EQ = Constraint(m.time_periods, rule=TBOX2EQ)
     
     def TATMEQ(m,t): # note initial condition
-        return m.TATM[t] == m.TBOX1[t] + m.TBOX2[t] if t > 1 else Constraint.Skip #NEW
+        return m.TATM[t+1] == m.TBOX1[t+1] + m.TBOX2[t+1] if t < p._numtimes else Constraint.Skip #NEW
     m._TATMEQ = Constraint(m.time_periods, rule=TATMEQ)
     
     def irfeqlhs(m,t):
