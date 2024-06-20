@@ -339,19 +339,19 @@ def build_model(params):
     
     # Economic Variables
     
-    def YGROSSEQ(m,t): # Gross world product GROSS of abatement and damages (trillions 20i9 USD per year)
+    def YGROSSEQ(m,t): # Gross world product GROSS of abatement and damages (trillions 2019 USD per year)
         return m.YGROSS[t] == (m.aL[t] * ((m.L[t] / 1000)**(1 - p._gama))) * (m.K[t]**p._gama)
     m._YGROSSEQ = Constraint(m.time_periods, rule=YGROSSEQ)
     
-    def YNETEQ(m,t):
+    def YNETEQ(m,t): # Output net of damages equation
         return m.YNET[t] == m.YGROSS[t] * (1 - m.DAMFRAC[t])
     m._YNETEQ = Constraint(m.time_periods, rule=YNETEQ)
     
-    def YEQ(m,t):
+    def YEQ(m,t): # gross world product net of abatement and damages
         return m.Y[t] == m.YNET[t] - m.ABATECOST[t]
     m._YEQ = Constraint(m.time_periods, rule=YEQ)
     
-    def CEQ(m,t):
+    def CEQ(m,t): # consumption
         return m.C[t] == m.Y[t] - m.I[t]
     m._CEQ = Constraint(m.time_periods, rule=CEQ)
     
@@ -359,11 +359,11 @@ def build_model(params):
         return m.CPC[t] == 1000 * m.C[t] / m.L[t]
     m._CPCEQ = Constraint(m.time_periods, rule=CPCEQ)
     
-    def IEQ(m,t):
+    def IEQ(m,t): # investment
         return m.I[t] == m.S[t] * m.Y[t]
     m._IEQ = Constraint(m.time_periods, rule=IEQ)
     
-    def KEQ(m,t): # note initial condition
+    def KEQ(m,t): # capital stock, note initial condition
         return m.K[t+1] <= ((1 - p._dk)**p._tstep) * m.K[t] + p._tstep * m.I[t] if t < p._numtimes else Constraint.Skip
     m._KEQ = Constraint(m.time_periods, rule=KEQ)
     
