@@ -165,7 +165,7 @@ def build_model(params):
     
     # initialize values as 1 to avoid potential issues (exceptions: MIU, S, C, MAT which may have bounds that exclude 1)
     # (must still be within bounds, and use init2 if initial value is specified in bounds)
-    init1, init2 = dict(zip(np.arange(1,x),np.ones(x))), dict(zip(np.arange(2,x),np.ones(x-1)))
+    init1, init2, init0 = dict(zip(np.arange(1,x),np.ones(x))), dict(zip(np.arange(2,x),np.ones(x-1))), dict(zip(np.arange(1,x),np.append(np.array([0]),np.ones(x-1))))
     
     m.UTILITY    = Var(domain=Reals, initialize=1)                                                                  #utility function to maximize in objective
     m.MIU        = Var(m.time_periods, domain=NonNegativeReals, bounds=MIUBounds)                                   #emission control rate
@@ -186,8 +186,8 @@ def build_model(params):
     m.CPRICE     = Var(m.time_periods, domain=Reals, bounds=CPRICEBounds, initialize = init2)                       #Carbon price (2019$ per ton of CO2)
     m.TOTPERIODU = Var(m.time_periods, domain=Reals,initialize = init1)                                             #Period utility
     m.RFACTLONG  = Var(m.time_periods, domain=NonNegativeReals, bounds=RFACTLONGBounds, initialize = init2)         #Long interest factor
-    m.RSHORT     = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Short interest factor
-    m.RLONG      = Var(m.time_periods, domain=Reals, initialize = init1)                                            #Long interest factor
+    m.RSHORT     = Var(m.time_periods, domain=Reals, initialize = init0)                                            #Short interest factor
+    m.RLONG      = Var(m.time_periods, domain=Reals, initialize = init0)                                            #Long interest factor
 
     # Variables in FAIR and Nonco2 modules
     m.FORC       = Var(m.time_periods, domain=Reals,initialize = init2)                                             #Increase in radiative forcing (watts per m2 from 1765)

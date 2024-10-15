@@ -4,6 +4,7 @@ Authors: Jacob Wessel, George Moraites
 
 from pyomo.environ import *
 from pyomo.opt import SolverFactory
+from scipy.optimize import curve_fit
 
 import numpy as np
 import pandas as pd
@@ -75,10 +76,14 @@ if __name__ == '__main__':
     # (m.eco2[t] and m.C[t] need to be marginal (dual) values based on their respective constraints, not primal variable values)
     eco2_dual = np.array([m.dual.get(m._ECO2EQ[i]) for i in m._ECO2EQ])
     c_dual = np.array([m.dual.get(m._CEQ[i]) for i in m._CEQ])
-    results['scc']           = -1000 * eco2_dual / (.00001 + c_dual)  # see include/def-opt-b-4-3-10.gms
 
-
-
+    def func(x, a, b, c, d,e):
+        return a*x**4 + b*x**3 + c*x**2 +d*x + e
+    popt, pcov = curve_fit(func, np.arange(2,p._numtimes+1), eco2_dual[1:])
+    eco2_dual[0] = func(1,popt[0],popt[1],popt[2],popt[3],popt[4])
+    
+    results['scc'] = -1000 * eco2_dual / (.00001 + c_dual)  # see include/def-opt-b-4-3-10.gms
+    
     if write_csv == True:
         results.to_csv('outputs/{}.csv'.format(scenario_name), index=False)  # export csv of results
     
